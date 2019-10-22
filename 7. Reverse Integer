@@ -1,0 +1,21 @@
+class Solution {
+    public int reverse(int x){
+        
+        double finalnum = 0;
+        int k = 1;
+        while(x != 0)
+        {
+            int ldig = x % 10;
+            x /= 10;
+
+            finalnum = (finalnum*10) + ldig;
+        }
+        
+       if(finalnum > Integer.MAX_VALUE || finalnum < Integer.MIN_VALUE)
+            {
+                return 0;
+            }
+        
+        return (int)finalnum;
+    }
+}

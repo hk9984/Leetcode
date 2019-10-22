@@ -1,0 +1,46 @@
+/*
+Runtime: 4 ms, faster than 75.84% of Java online submissions for Roman to Integer.
+Memory Usage: 36.4 MB, less than 100.00% of Java online submissions for Roman to Integer.
+*/
+
+class Solution {
+    
+    public int getIntValue(char c)
+    {
+        switch(c)
+        {
+            case 'I': return 1;
+            case 'V': return 5;
+            case 'X': return 10;
+            case 'L': return 50;
+            case 'C': return 100;
+            case 'D': return 500;
+            case 'M': return 1000;
+            default: return 0;
+        }
+            
+    }
+    public int romanToInt(String s) {
+        
+        int finalnum = 0;
+        
+        for(int i=s.length()-1; i>=0; i--)
+        {
+            if(i > 0)
+            {
+                if(getIntValue(s.charAt(i-1)) < getIntValue(s.charAt(i)))
+                {
+                    finalnum = finalnum - getIntValue(s.charAt(i-1)) + getIntValue(s.charAt(i));
+                    i -= 1;
+                }
+                else
+                    finalnum += getIntValue(s.charAt(i));
+            }
+            else
+                finalnum += getIntValue(s.charAt(i));
+        }
+        
+        return finalnum;
+        
+    }
+}

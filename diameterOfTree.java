@@ -1,5 +1,22 @@
 package Coupang;
 
+/*
+Diameter of Binary Tree is actually the number of edges in the longest path of a binary tree.
+It happens with two cases:
+
+* Case I: When the root node is in the path of the diameter. In this case, 
+	 Diameter = Height of left subtree + Height of right subtree + 2 (2 is for the two edges from the root node to the left and right subtree)
+	 
+* Case II: When the root node is not in the path of the diameter. It means that the diameter(or the longest path) is in either left or right subtree. In this case, 
+	 Diameter = Maximum of (Left subtree diameter) and (Right subtree diameter)
+	 
+	
+* Hence, Diameter of a tree is given by: 
+
+	Maximum of ((Height of left subtree + Height of right subtree + 2) and (Maximum of (Left subtree diameter) and (Right subtree diameter)))
+
+*/
+
 public class diameterOfTree {
 	
 	

@@ -23,7 +23,7 @@ public class diameterOfTree {
 	public static int diameter(TreeNode root) {
 		
 		if(root == null)
-			return 0;
+			return -1;
 		
 		int lheight = heightOfTree(root.left);
 		int rheight = heightOfTree(root.right);
@@ -36,7 +36,7 @@ public class diameterOfTree {
 	
 	public static int heightOfTree(TreeNode root) {
 		if(root == null)
-			return 0;
+			return -1;
 		
 		else
 			return 1 + Math.max(heightOfTree(root.left), heightOfTree(root.right));
@@ -68,7 +68,27 @@ public class diameterOfTree {
 		root.right.left = new TreeNode(6);
 		root.right.right = new TreeNode(7);
 		root.right.right.left = new TreeNode(8);
-		System.out.println("Diameter of tree: " + diameter(root));
+		
+		System.out.println("Diameter of Tree having Case I: " + diameter(root));
+		
+		TreeNode root2 = new TreeNode(1);
+		root2.right = new TreeNode(2);
+		root2.right.right = new TreeNode(3);
+		root2.left = new TreeNode(4);
+		root2.left.left = new TreeNode(5);
+		root2.left.right = new TreeNode(6);
+		root2.left.left.left = new TreeNode(7);
+		root2.left.left.right = new TreeNode(8);
+		root2.left.right.right = new TreeNode(9);
+		root2.left.left.right.left = new TreeNode(10);
+		root2.left.right.right.left = new TreeNode(11);
+		root2.left.right.right.right = new TreeNode(12);
+		root2.left.left.right.left.left = new TreeNode(13);
+		root2.left.left.right.left.right = new TreeNode(14);
+		root2.left.right.right.right.right = new TreeNode(15);
+		
+		System.out.println("Diameter of Tree having Case II: " + diameter(root2));
+		
 
 	}
 

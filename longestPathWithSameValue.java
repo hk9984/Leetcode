@@ -1,3 +1,9 @@
+/*
+ * 
+ * Time Complexity: O(N), where N is the number of nodes in the tree. We process every node once.
+ * Space Complexity: O(H), where H is the height of the tree. Our recursive call stack could be up to H layers deep.
+ * */
+
 package Coupang;
 
 public class longestPathWithSameValue {
@@ -56,7 +62,7 @@ public class longestPathWithSameValue {
 		root.right.right.right.left.right = new TreeNode(13);
 		
 		System.out.println("Longest Path with same value: " + lengthLongestPath(root));
-		//HashSet<Integer>hs = new HashSet<Integer>();
+		
 		
 
 	}

@@ -3,7 +3,7 @@ package Walmart;
 import java.util.HashMap;
 import java.util.Map;
 
-public class lenLongestSubstring_leetcode3 {
+public class lenLongestSubstring_withoutRepeating_leetcode3 {
 	
 	public static int lengthOfLongestSubstring(String s) {
 		

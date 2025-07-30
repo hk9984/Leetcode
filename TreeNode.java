@@ -1,4 +1,4 @@
-package Coupang;
+package Leetcode;
 
 public class TreeNode {
 	int data;

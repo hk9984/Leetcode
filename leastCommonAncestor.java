@@ -1,6 +1,43 @@
-package Coupang;
+package Leetcode;
 
 public class leastCommonAncestor {
+
+	public static String dfsPath(TreeNode root, TreeNode searchNode) {
+
+        if(root == null)
+			return "";
+			
+		String path = "";
+
+        if(root == searchNode) {
+            path += "-" + root.data;
+            return path;
+        }
+
+        String leftSubtreePath = dfsPath(root.left, searchNode);
+        String rightSubtreePath = dfsPath(root.right, searchNode);
+
+        if(!leftSubtreePath.equals("") || !rightSubtreePath.equals("")) {
+            path += root.data + leftSubtreePath + rightSubtreePath;
+        }
+
+        return path;
+    }
+
+	public static TreeNode searchLCANode(TreeNode root, int searchVal) {
+
+		if(root == null)
+			return null;
+		
+		if(root.data == searchVal)
+			return root;
+
+		TreeNode left = searchLCANode(root.left, searchVal);
+		TreeNode right = searchLCANode(root.right, searchVal);
+
+		return (left != null) ? left : right;
+		
+	}
 	
 	public static TreeNode findLCA(TreeNode root, int key1, int key2) {
 		
@@ -34,6 +71,37 @@ public class leastCommonAncestor {
 		return (left_lca != null) ? left_lca : right_lca;
 	}
 
+	public static TreeNode LCAalternate(TreeNode root, TreeNode p, TreeNode q) {
+
+		if(root == p || root == q)
+            return root;
+
+        if(p == q)
+            return p;
+
+        if(p == null || q == null)
+            return null;
+
+        char[] pathP = dfsPath(root, p).toCharArray();
+        char[] pathQ = dfsPath(root, q).toCharArray();
+
+		char LCA = pathP[1];
+		for(int i=2; i<pathP.length && i<pathQ.length; i++) {
+			if(pathP[i] == pathQ[i]) {
+				if(pathP[i] == '-')
+					continue;
+				else
+					LCA = pathP[i];
+			}
+				
+			else
+				break;
+		}
+
+		return searchLCANode(root, (int)LCA);
+
+	}
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		TreeNode root = new TreeNode(1);
@@ -52,6 +120,14 @@ public class leastCommonAncestor {
 		System.out.println("LCA of (3,5): " + findLCA(root, 3, 5).data);
 		System.out.println("LCA of (5,7): " + findLCA(root, 5, 7).data);
 		System.out.println("LCA of (6,8): " + findLCA(root, 6, 8).data);
+
+		System.out.println("LCA of (4,5): " + LCAalternate(root, root.left.left, root.left.right).data);
+		System.out.println("LCA of (1,6): " + LCAalternate(root, root, root.right.left).data);
+		System.out.println("LCA of (1,7): " + LCAalternate(root, root, root.right.right).data);
+		System.out.println("LCA of (2,7): " + LCAalternate(root, root.left, root.right.right).data);
+		System.out.println("LCA of (3,5): " + LCAalternate(root, root.right, root.left.right).data);
+		System.out.println("LCA of (5,7): " + LCAalternate(root, root.left.right, root.right.right).data);
+		System.out.println("LCA of (6,8): " + LCAalternate(root, root.right.left, root.right.right.left).data);
 
 	}
 

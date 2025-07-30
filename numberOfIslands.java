@@ -71,6 +71,7 @@ public class numberOfIslands {
         int nc = grid[0].length;
         int num_islands = 0;
 
+
         for (int r = 0; r < nr; ++r) {
           for (int c = 0; c < nc; ++c) {
             if (grid[r][c] == '1') {

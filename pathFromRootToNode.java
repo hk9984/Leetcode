@@ -1,4 +1,4 @@
-package Coupang;
+package Leetcode;
 
 public class pathFromRootToNode {
 	
@@ -43,6 +43,41 @@ public class pathFromRootToNode {
 		
 		System.out.println("Path from Root to Node 2: " + pathFromRoot(root, 9));
 
+	}
+
+
+	public String path(TreeNode root, int searchVal) {
+		if(root == null)
+			return "";
+
+		if(root.data == searchVal)
+			return " " + root.data;
+
+		String leftString = path(root.left, searchVal);
+		String rightString = path(root.right, searchVal);
+
+		if(!leftString.equals("") || !rightString.equals(""))
+			return root.data + " " + leftString + rightString;
+
+		return "";
+	}
+
+	public int depthOfNode(TreeNode root, int val) {
+		if(root == null)
+			return -1;
+
+		if(root.data == val)
+			return 0;
+
+		int leftDepth = depthOfNode(root.left, val);
+		int rightDepth = depthOfNode(root.right, val);
+
+		if(leftDepth != -1)
+			return leftDepth + 1;
+		else if(rightDepth != -1)
+			return rightDepth + 1;
+
+		return -1;
 	}
 
 }

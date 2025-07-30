@@ -1,0 +1,268 @@
+---LRU Cache----------------------------------------------------------------------------------------------------------------------------
+
+
+DLL Each Node = [prev |key|value| next]
+
+LRUCache{
+    int capacity
+    HashMap keyToNode
+    DLL Node head and tail  (head and tail dummy nodes)
+    head.next = tail, tail.next = head;
+
+    2 methods:
+    add(Node)
+        add node always at the tail (most recently used) (i.e. tail.prev = node)
+    
+    remove(Node)
+        just remove node by connecting prev and next together
+
+    get(int key)
+        check if key present in keyToNode Map
+            if no, then return -1
+
+            if yes, then return val, and then also remove(Node), then add(Node)
+
+    put(key, value)
+        check if key present in keyToNode Map
+            if yes
+                remove(oldNode)
+            create newNode, add in the keyToNode Map updating the key mapping to newNode
+            add(Node)
+            if keyToNode.size() > capacity
+                remove node from head i.e. remove(head.next)
+                also remove mapping i.e. keyToNode.remove(head.next.key)
+
+
+Time and space : O(1) and O(capacity)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+-----Product of Array Except Self----------------------------------------------------------------------------------------------------------------------------
+
+Algo: Calculate prefix array and suffix array and multiply both arrays. O(n) and O(n)
+Optimized algo: calculate prefix array, then loop back with suffix multiplying in the same array. O(n) and O(1) space
+Calculate prefix sum first : 
+- prefix[0] = 1
+- iterate, prefix[i] = prefix[i-1] * nums[i-1]
+- then, in the same array, loop back multiply with suffix (suffix variable wit)
+    suffix = 1;
+    prefix[i] = prefix[i] * suffix;
+    suffix *= nums[i];
+
+Time and Space: O(n) and O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+Heap/PriorityQueue questions:
+
+- Top K Frequent words or same Top K Frequent Elements: Original solution (Map + Priority Queue) -> Time: O(Nlogk) and Space: O(N)
+check Trie + Bucketsort solution as well
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+MeetingRooms I
+Qs intervals[i] = [start, end] , true or false if person can attend all meetings. Example: [[0,30],[5,10],[15,20]] -> false
+Soln: Sort the array according to starttime, loop from 1 to n. if starttime of i is < endtime of i-1 return false. If loop completes, return true
+
+* Time: O(N⋅logN) coz of sorting. Space: O(1)
+
+MeetingRooms II
+Qs intervals[i] = [start, end], minimum number of conf rooms required. Example: [[0,30],[5,10],[15,20]] -> 2 rooms
+Soln: Sort array on starttime. Then priority queue minheap on endtime. Add first element endtime. Loop from 1 to n, if starttime of i >= pqueue.peek() that means room can be reused, hence pqueue.poll()
+Then add endtime of i on queue. Return size of queue showing number of rooms
+
+* Time: O(N.logN) coz of sorting. Space: O(N)
+
+MergeIntervals
+Qs intervals[i] = [start, end], merge all overlapping intervals and return an array of non-overlapping intervals. Example: [[1,4],[4,5],[7,9],[8,10]] -> [[1,5],[7,10]]
+Ans: Sort array based on start time. Create list, and add intervals[0]. loop from 1 to n, if currInterval starttime is <= list interval endtime, update listinterval endtime to Math.max(currInterval.endtime, listInterval.endtime)
+else listInterval = currInterval, add listInterval onto list. In the end, convert list to array by return intervallist.toArray(new int[intervallist.size()][2]);
+ 
+* Time: O(N⋅logN) coz of sorting. Space: O(N)
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+        
+LinkedList
+
+Add Two Numbers
+Qs LinkedList in reverse order. Add and give result. Ex: l1=[2,4,3] l2=[5,6,4] -> [7,0,8]
+Ans: 
+Node dummy = new Node(-1); Node curr = dummy; int carry = 0;
+while(l1 not null || l2 not null || carry != 0){
+    val1 = l1 not null ? l1.val : 0
+    val2 = l2 not null ? l2.val : 0
+    sum = val1 + val2 + carry
+    carry = sum/10
+    curr.next = new Node(sum%10)
+    curr = curr.next;
+    if l1 not null, l1 = l1.next
+    if l2 not null, l2 = l2.next
+}
+return dummy.next;
+
+* Time: O(max(M,N)). Space: O(max(m,n)) + 1 (+1 when carry leads to an extra number. Ex: 9 + 1 = 10)
+
+Qs Copy List with Random Pointer. Do deep Copy
+Ans: Interweaving
+1st loop, create copy nodes and interweave nodes
+2nd loop, correctly assign random for the copy nodePaths. As follows:
+
+Node dummy = head;
+Node curr = head;
+while(curr != null) {
+    curr.next.random = (curr.random != null) ? curr.random.next : null;
+    curr = curr.next.next;
+}
+
+3rd loop, remove Interweaving
+curr = dummy;
+Node result = curr.next;
+while(curr!=null) {
+    Node temp = curr.next.next;
+    curr.next.next = (temp == null) ? null : temp.next;
+    curr.next = temp;
+    curr = curr.next;
+}
+return result;
+
+* Time: O(N) Space: O(1)
+
+Qs Merge 2 sorted lists . Ex: list1 = [1,2,4], list2 = [1,3,4] -> [1,1,2,3,4,4]
+Ans Node dummy = new Node(-1);
+Node curr = dummy;
+while(l1 != null && l2 != null) {
+    if(l1.val <= l2.val){
+        curr.next = l1;
+        l1 = l1.next;
+    }
+    else{
+        curr.next = l2;
+        l2 = l2.next;
+    }
+    curr = curr.next;
+}
+curr.next = (l1 == null) ? l2:l1;
+return dummy.next;
+
+* Time: O(m+n). Space: O(1)
+
+Qs Merge k sorted lists. Example: [[1,4,5],[1,3,4],[2,6]] -> [1,1,2,3,4,4,5,6]
+Ans 2 ways: 
+1st divide and conquer. Pair every 2 linkedlists in the array, merge them using merged2sortedlists() as above, and put it back.
+Keep doing it until only 1 value is present. Return that 1 value
+
+* time complexity: O(n.logk) , Space: O(K)
+
+2nd Use min-heap priority queue
+1. Create a min-heap (priority queue) of ListNode
+2. Insert the head of each of the k lists into the heap → O(k log k)
+3. While the heap is not empty:
+    - Pop the smallest node → O(log k)
+    - Append it to the result list
+    - If it has a next node, push that node into the heap → O(log k)
+
+* Time: O(n.logK), space: O(K)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Longest Common prefix
+Solution1 : Horizontal scanning
+public String longestCommonPrefix(String[] strs) {
+    if (strs.length == 0) return "";
+    String prefix = strs[0];
+    for (int i = 1; i < strs.length; i++) while (
+        strs[i].indexOf(prefix) != 0
+    ) {
+        prefix = prefix.substring(0, prefix.length() - 1);
+        if (prefix.isEmpty()) return "";
+    }
+    return prefix;
+}
+Time: O(S) -> S is sum of all characters in all strings, space: O(1)
+
+Solution2: 
+Using Trie - first add all elements uisng add(word) method
+then 
+public String lcpWithTrie() {
+    TrieNode curr = root;
+    StringBuilder prefix = new StringBuilder();
+
+    while(curr != null) {
+        if(curr.children.size() != 1 || curr.endOfWord)
+            break;
+        Map.Entry<Character, TrieNode> entry = curr.children.entrySet().iterator().next();
+        prefix.append(entry.getKey());
+        curr = entry.getValue();
+    }
+
+    return prefix.toString();
+}
+Time -> O(L + S) S-> sum of all characters in string
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Qs. Analyze userwebsite visit pattern 
+Ans: 
+- First UserRecord class with username[i], website[i], timestamp[i]
+- Put in a list. Then sort the list ascending on timestamp
+- Create userToWebsite map <String, List<String>> user -> All Websites they hit with increasing timestamp (done by sorting previous step)
+- For each website hit by different users, use triple loop to generatePatterns of 3-sequence (separate method). This method returns set of generatePatterns
+- Create patternToUser map <String, Set<String>> pattern -> Set of users.
+- Keep a maxOccuringLength int and maxOccuringPattern String
+- Iterate through userToWebsite, run generatePatterns for each user->Website, and for every pattern->user in patternToUser map
+- On every addition, check if patternToUser.get(user).size() > maxOccuringLength, then maxOccuringLength = patternToUser.get(user).size(), and maxOccuringPattern = pattern
+- If patternToUser.get(user).size() == maxOccuringLength && pattern.compareTo(maxOccuringPattern)<0, then maxOccuringPattern = pattern (lexicographic if pattern count same)
+- return maxOccuringPattern
+
+Time: O(nlogn) due to sorting. Space: O(n)
+----------------------------------------------------------------------------------------------------------------------------------------
+Qs Group Anagrams. ["eat","tea","tan","ate","nat","bat"] -> [["bat"],["nat","tan"],["ate","eat","tea"]]
+Ans: 
+- create map anagramMap <String, List<String>> . anagram -> list of strings from input
+- for every string in input list:
+    iterate through every character, create a char[] chArr and chArr[c - 'a']++
+    Key in anagramMap : key : String.valueOf(chArr);
+    Value in map is a list of the above anagram, add current iterated string in that list
+- in the end, create List<List<String>> result
+- iterate through anagramMap.values(), add each value (which is a list of strings) in the result, and return result
+
+Time: O(N.K) where K is length of largest string (iterate through every character in O(K). Doing for N string, hence O(N.K))
+Space: O(N.K)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Qs. Subarray Sum Equals K (total no. of subarray(continguous) whose sum equals k). 
+nums = [1,1,1], k = 2, Output: 2 (subrrays [1,1] at idx 0 and 1, then [1,1] at idx 1 and 2)
+
+Ans: 
+VISUALIZATION CONCEPT:
+If we have array [a, b, c, d, e] and want subarray sum = k
+Prefix sums: [a, a+b, a+b+c, a+b+c+d, a+b+c+d+e]
+For subarray from index i to j to have sum k: (prefix_sum[j] - prefix_sum[i-1]) = k
+Therefore: prefix_sum[i-1] = prefix_sum[j] - k
+
+When we're at index j, we look for how many times we've seen
+the value (current_prefix_sum - k) in our previous prefix sums.
+*/
+
+code:
+int count = 0; prefixSum = 0;
+Map to keep prefixSumCount <Integer, Integer> ; add first element prefixSumCount.put(0,1) -> this means one subarray found with prefixSum=0 (no element chosen)
+
+iterate i from 0 to n-1:
+    prefixSum = prefixSum + nums[i]
+    prefixSumDiff = prefixSum - k;
+    if(prefixSumCount.containsKey(prefixSumDiff))
+        count += prefixSumCount.get(prefixSumDiff);
+    prefixSumCount.put(prefixSum, prefixSumCount.getOrDefault(prefixSum, 0) + 1);
+
+return count;  
+
+Time: O(n) -> one pass, Space: O(n) -> map contains prefixSums
+
+NOTE: to print all that subarrays, make map prefixSumStartIndex as <Integer, List<Integer>> and instead of count, save the startingIndex of that prefixSum.
+Then wehenever found prefixSumDiff found while iterating, create subarrays from all values in prefixSumStartIndex.get(prefixSumDiff)...i , and add in a list
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Qs: Logger rate Limiter

@@ -222,7 +222,7 @@ Qs Group Anagrams. ["eat","tea","tan","ate","nat","bat"] -> [["bat"],["nat","tan
 Ans: 
 - create map anagramMap <String, List<String>> . anagram -> list of strings from input
 - for every string in input list:
-    iterate through every character, create a char[] chArr and chArr[c - 'a']++
+    iterate through every character, create a char[] chArr of size 26 and chArr[c - 'a']++
     Key in anagramMap : key : String.valueOf(chArr);
     Value in map is a list of the above anagram, add current iterated string in that list
 - in the end, create List<List<String>> result
@@ -232,7 +232,7 @@ Time: O(N.K) where K is length of largest string (iterate through every characte
 Space: O(N.K)
 
 ----------------------------------------------------------------------------------------------------------------------------------------
-Qs. Subarray Sum Equals K (total no. of subarray(continguous) whose sum equals k). 
+Qs. Subarray Sum Equals K (total no. of subarray(contiguous) whose sum equals k). 
 nums = [1,1,1], k = 2, Output: 2 (subrrays [1,1] at idx 0 and 1, then [1,1] at idx 1 and 2)
 
 Ans: 
@@ -319,7 +319,7 @@ maxLeft[] and maxRight[]. Compute maxLeft and maxRight at every index. maxLeft[0
 maxLeft[i] = Math.max(maxLeft[i-1], height[i-1]); maxRight[i] = Math.max(maxRight[i+1], height[i+1]);
 then loop from 1 to n-1 {
     bound = Math.min(maxLeft[i], maxRight[i]);
-    if(bound - height[i] >= 0)
+    if(bound - height[i] <= 0)
         continue;
     trapWater += bound - height[i];
 }
@@ -336,7 +336,7 @@ Ans:
 
 - iterate from 0 to n-1 {
     if current char is in the map:
-        if index in map <= startIndex: //this means it is present in the current sliding window, hence shortent the window
+        if index in map >= startIndex: //this means it is present in the current sliding window, hence shortent the window
             startIndex = charIndexMap.get(currentChar)+1
     
     lenLS = Math.max(lenLS, i-start+1)  //check max sliding window length
@@ -377,3 +377,173 @@ while(!queue.isEmpty()) {
 return (fresh == 0) ? minutes : -1;
 
 Time: O(MxN) Space: O(MxN)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Union-Find DSA - to find disjoint sets or joining sets Ex ques. number of connected components
+concept: every node in a set have 1 representative. To check if nodes are in the same set, their representatives should be the same.
+Otherwise they are in different sets. Optimize normal unionfind with path compression and union by rank
+class UnionFind {
+    int[] parent, rank;
+    UnionFind(int n) {
+        loop from i=0 to n
+            parent[i] = i; //each node parent of itself
+            rank[i] = 0; every node at rank 0
+    }
+    public int findRep(int i) {
+
+        if(parent[i] != i)   //this means that the current node has a parent/rep
+            parent[i] = find(parent[i]);   // this means make child closes to the root parent by recursively bubbling up to make root its direct parent
+        return parent[i];
+    }
+
+    public void unionByRank(int nodeA, int nodeB) {
+        int repNodeA = findRep(nodeA);
+        int repNodeB = findRep(nodeB);
+        if(repNodeA == repNodeB)
+
+    }
+}
+
+Time : O(alpha(n)) inverse ackermann function which steadily graduates and almost constant
+For num connected components questions
+
+Time: O(V + E.alpha(n)) -> V to create parent and rank arrays, E.alpha(n) coz iterate over each edge and run union method which takes alpha(n). Space: O(V)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Course Schedule I,II - Topo Sort O(V+E) 
+
+Qs. Course Schedule I - There are a total of numCourses courses you have to take, labeled from 0 to numCourses - 1. You are given an array prerequisites where prerequisites[i] = [ai, bi] 
+indicates that you must take course bi first if you want to take course ai. Return true if can finish all courses, else return false
+
+Soln: Using Topo sorting Kahn's algo for directed graph
+Algo:
+- create adj list 
+- Make indegree[] = new int[numCourses] to mark every node with the amount of incoming edges
+- Queue<Integer> . Go through indegree array, and add all the nodes with indegree 0 in the queue
+- while(!queue.isEmpty()) {
+    poll the node
+    iterate through adj list of polled node, indegree[neighbornode]--;
+    if indegree[neighbornode] == 0, add in queue
+}
+- after queue empty, if any i in indegree[] is != 0, then it means cycle. Hence, return false
+
+Time: O(V+E) . Space: O(V+E) indegree and adj list
+
+Course Schedule II
+
+Same algo as above. Addition: On every poll from queue, add it in the result array.
+If all courses visited, The result array is the final order and return. Otherwise if not all courses visited, return empty array
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Notes of Search 2d matrix
+Solution 1: Binary search for row first, then binary search within that row (logm + logn)
+Solution 2: Binary search for whole, where l = 0, r = rows*cols-1. while(l<=r), Then midelementIdx = (l+r)/2, and  midElement = grid[midelementIdx/cols][midelementIdx%cols];
+If midElement == target, return true
+else if midElement > target, r = midElementIdx - 1; else, l = midElementIdx+1;
+
+return false if coming out of loop 
+
+Time: O(logmn)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Notes for coin change 1, coin change 2
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Qs. Best time to buy and sell stock. You want to maximize your profit by choosing a single day to buy one stock and 
+choosing a different day in the future to sell that stock.
+Return max profit. If cannot achieve, return 0
+
+I/p: prices = [7,1,5,3,6,4] . O/p: 5 (Buy on day 2 and sell on day 5 -> 6 - 1)
+Soln:
+int maxP = 0;
+int minVal = prices[0];
+for(int i=1; i<prices.length; i++) {
+    maxP = Math.max(maxP, prices[i] - minVal);
+    if(prices[i] < minVal)
+        minVal = prices[i];
+    }
+return maxP;
+
+Time: O(n) . space: O(1)
+----------------------------------------------------------------------------------------------------------------------------------------
+Qs: Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that 
+i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.
+
+Soln: Algo:
+- List<List<Integer>> resultTriplets;
+- Sort the array
+- for(int )i=0; i<nums.length && nums[i]<=0;i++){
+    if(i==0 || nums[i] != num[i-1])
+        twoSum(resultTriplets, nums, nums.length, i);
+}
+- return resultTriplets;
+
+void twoSum(List<List<Integer>> resultTriplets, int[] nums, int numsLength, int index) {
+    int low = index+1;
+    int high = numsLength-1;
+    while(low<high) {
+        int sum = nums[index] + nums[low] + nums[high];
+        if(sum<0)
+            low++;
+        else if(sum>0)
+            high--;
+        else {
+            resultTriplets.add(nums[index], nums[low], nums[high]);
+            low++;
+            high--;
+            while(low<high && nums[low] == nums[low-1])
+                low++;
+        }
+    }
+}
+Time: O(nlogn + n^2) ~~ O(n^2) -> Sorting nlogn. twoSum is O(n) and we call it n times. Hence n^2
+----------------------------------------------------------------------------------------------------------------------------------------
+Qs. Maximum Subarray : Given an integer array nums, find the subarray with the largest sum, and return its sum(and also printing).
+I/P: nums = [-2,1,-3,4,-1,2,1,-5,4] , O/P: 6 (subarray -> [4,-1,2,1])
+
+Soln:
+int start=0;tempstart=0,end=0; //start and end for printing
+currSum=nums[0]; maxSum=nums[0]; //currSum is always calculating sum for the current subarray chosen
+
+loop from 1 to n-1:
+    if(nums[i] > currSum + nums[i])
+        tempStart=i;
+        currSum=nums[i]; //subarray starting from i now
+    else
+        currSum = currSum + nums[i];
+
+    if(currSum > maxSum)
+        start = tempStart;
+        end = i;
+        maxSum = currSum;
+printing subarray from start to end
+return maxSum;
+
+Time: O(n) . Space: O(1) just variables
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Qs. Merge Sorted array
+I/P: nums1 = [1,2,3,0,0,0], m = 3, nums2 = [2,5,6], n = 3 , O/P: [1,2,2,3,5,6]
+
+Soln: Algo:
+keep updatePtr = m+n-1
+nums1ptr = m-1 (nums1 end), nums2Ptr = n-1 (nums2end)
+
+loop(nums1ptr>=0 && nums2Ptr>=0)
+    if value at nums1ptr >= value at nums2ptr
+        update nums1[updatePtr--] = nums1[nums1ptr--]
+    else
+        update nums1[updatePtr--] = nums2[nums2ptr--]
+
+after the loop
+if(nums2ptr>=0)
+    then loop while(nums2ptr>=0)
+        nums1[updatePtr--] = nums2[nums2ptr--]
+
+Time: O(m+n) iterating both strings . Space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+

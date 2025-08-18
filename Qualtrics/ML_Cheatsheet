@@ -1,0 +1,230 @@
+Machine Learning
+
+1. Supervised Learning - Labeled data, train on that data, give output on unseen data whether data is Dog or Cat
+
+Categories of Supervised Learning:
+- Regression: Predict a continuous numeric target variable. Ex: Linear regression model - predicting price of the house based on any number of features and determining price
+Maybe, price is highly dependent on sq. footage of house but mayne not that much on age of house
+
+- Classification: Predict discrete categorical variable ("label"/"class") 
+Ex: spam no spam classification categorize of email
+
+
+Linear Regression
+- Trying to dteremine lineae relationship between 2 variables (Independent and dependent variable). Minimize prediction error
+Ex: linear relationship between height and shoe size of a person. Example with every shoe size increase, there might be a 2 inch height increase
+Can increase parameters
+
+
+Logistic Regression
+- Extension of Linear regression, most basic classification algorithm
+- Categorical output variable - using categorical or numerical input variable
+Ex: Predict gender of a persion based on height weight of a persion. Maybe using sigmoid function which gives probability output.
+Probability of a data point following in a particular class given the value of the i/p variable.
+Ex: probability of and adult with height 187cm to be a make can be 80%
+
+
+k Nearest Neighbors (KNN) 
+- Non parametric algorithm
+- Can be both regressional and classification
+- No true model fitting
+- For any given new data point, predict the target would be the average value of its k nearest neighbors
+- Can also be complicated non-linear decision boundary
+
+Classification example: Given a dataset of Males and Females with their heights and weights.
+For any new person, the gender of the person will be the majority of the 5 people closest in height and weight of the person (k=5)
+
+Regression example: Weight of a person is the average weight of 5 people closest to it in height and chest circumference
+
+- If K too low (K=1), Over-fitting (force-fitting). Predicting training data very well, but fail in predicting properly unseen data. Too specific and would fail to generalize more
+Fixes: 
+- Increase k → Use majority vote from more neighbors (smoother boundary).
+- Feature selection / dimensionality reduction (PCA) → Reduce irrelevant features that add noise.
+- Distance weighting → Give closer neighbors more importance than far ones.
+- Cross-validation → Choose best k by testing on validation folds.
+- If k too high (K=1000), Under-fitting. Not enough categorizing happening so would fail
+Example: In a medical diagnosis dataset, if k=1, one noisy patient record (misdiagnosed) can drastically affect predictions.
+
+
+- If K too high (K=1000), Underfitting. Model too simple, ignoring small patterns
+Fixes:
+- Decrease k → Capture more local structure.
+- Feature scaling (normalization/standardization) → Ensure important features aren’t washed out.
+- Add more relevant features → Give the model more discriminatory power.
+Example: If k is too large, the system always recommends “popular” items (generic), ignoring niche interests.
+Reducing k makes recommendations more personalized.
+
+1 Method to find right parameters is called cross validation
+Cross-validation is a resampling method to evaluate model performance more reliably.
+
+k-fold cross-validation steps:
+    Split dataset into k parts (folds).
+    Train on k-1 folds, validate on the remaining fold.
+    Repeat for all folds.
+    Average the validation performance.
+
+Why important for hyperparameters?
+    Helps choose the best k (neighbors) in KNN.
+    Avoids overfitting to a single train/validation split.
+    Ensures model generalizes better.
+
+What is Feature scaling? 
+- Many ML algorithms (KNN, SVM, Gradient Descent, PCA) are distance-based or sensitive to feature magnitudes.
+Ex: For Movie recommendation systems, consider deciding features are (Age, No.of movies watched)
+Imagine Age Range is (15-70). Imagine NumMoviesWatched ranged is (5,5000) . The spread of movies watched is way higher than age
+Hence, without feature scaling, the num movies watched will overpower the decision when both the parameters are equally important
+
+To handle this and implement feature scaling, 2 methods (both are Data PREPROCESSING steps):
+- Normalization:
+    Min-max scaling
+    Formula : x' = x - min(x) / max(x) - min(x)
+    Scales values to range [0, 1].
+    Best when data does not have outliers. If there is one extreme outlier, the min or max becomes very large or very small. Hence, values squish to zero
+
+    Example:
+    Heights [150, 200] cm 
+    → after normalization:
+    150 → 0
+    200 → 1
+    180 → 0.6
+
+- Standardization:
+    z-score scaling
+    Formula : x' = (x - u)/SD  , where u = Mean, SD = standard deviation (To calculate SD, first find mean. then find average squared differences of each values from mean. Add all of them and divide by n i.e. variance.
+    Then take sqrt of variance which is the SD)
+    Variance : how much prediction will change if we change the training data. High variance means overfitting (more sensitive)
+    Transforms data to have mean = 0, std dev = 1.
+    Better when data has outliers or not bounded. Outliers affect mean and σ, but not as severely as min-max.
+    Standardized data still spreads around 0, keeping useful variation intact.
+    
+    Example:
+    Weights [60, 70, 80, 90] kg, mean=75, std=10.
+    60 → (60-75)/10 = -1.5
+    90 → (90-75)/10 = +1.5
+
+
+- Support Vector Machine (SVM)
+- Supervised : Classification and Regression
+- Concept : Make decision boundary between data points that separates distance between training data points with the largest margin as possible
+- Memory efficient
+- Powerful with high dimensions. i.e. no of features larged compared to size of data. In those higher dimensional cases, the decision boundary is called hyperplane
+- Non-linear decision boundaries with Kernel functions. Why kernels? Because real-world data often isn’t separable with a straight line. Kernels let SVM draw flexible boundaries (curves, circles, etc.).
+- Kernel functions: 
+    Linear (data linearly separable)
+    Polynomial (data with curved boundaries so poly function)
+    RBF Radial Basis Function (data into infinite-dimensional space using Gaussian), captures highly complex non-linear patterns. Most common
+    Sigmoid: Similar to neural network activation
+- Example use cases: Spam detection Text classification
+
+
+ Naive Bayes Classifier (NB) in Bayes theorem
+
+ Formula:
+ P(A | B)  = P(B | A) . P(A) / P(B)
+
+ Prob. of A occuring   = Prob. of B occuring A has occured . Prob. of A occuring / Prob. of B occuring
+ given B has already
+ occured
+
+Example use case: Spam filters
+Count the occurence of each word in each class. 
+
+P(Email to be Spam if word present is Penis) = P(Word Penis present if email is spam) . P (Spam email) / P(Word Penis occuring)
+Consider total emails are 74. 25 times Penis in those 74 emails. 30 of those emails were spam. In 30 of those spam emails, 24 had Penis in it
+
+Hence , P(Email be spam if word Penis present) = (24/30)  * (30/74) / (25/74) = 0.96
+This means, P (Email to be spam if word present is Penis) = 96%
+
+NOTE: This algiorithm false assumption that words appearing are independent of each other. Hence, naive . Doesn't consider feature/word dependence
+Computationally efficient
+
+
+Decision Tree Classifier
+
+- Yes no decisions
+- Goal: Create leaf nodes that are as pure as possible. Splits that lead to leaves which have classes
+- combining many simple decision trees together into a complex decision tree is called ensemble algorithm
+- Bagging: Train multiple models (decision trees) on different subsets of data and then result aggregation. 
+- An example of this is Random Forest Classifier. 
+
+Random Forest Classifier
+- Many decision trees vote on classification of data. Then aggregation, majority decision tree results result in classification of that data
+- Ex: 5 decision trees. 3 vote a data as Apple, 2 as Banana. Aggregation majority - the value is Apple
+- Why Random? Randomly choosing different features for different decision trees in the forest
+- Hence, good estimator and robust. Prevents overfitting too by not relying too much on correlation of features
+Ex: Credit Risk scoring based on features if customer considered risky or not on features
+- works best:
+    Medium-sized datasets (10K – 1M rows).
+    Mixed data types (categorical + numerical).
+    Noisy or missing data.
+    Need feature importance for interpretability.
+- not ideal cases: large datasets, sparse data, real-time low latency
+
+Another Ensemble Algorithm apart from Bagging: Boosting
+In Bagging, decision trees in parallel
+In Boosting, decision trees in sequence. Task every decision tree focus on fixing errors from previous trees
+- Weaker trees in sequence become stronger data models
+- Accurancy generally higher than RF but prone to overfitting. Also due to sequential, slower to train than RF
+
+LOSS FUNCTION 
+Loss = “How bad is my prediction compared to reality?” A mathematical function measuring the difference between predicted and actual values.
+Common loss functions:
+- Regression → MSE (Mean Squared Error).
+- Classification → Log Loss (Cross-Entropy).
+
+- MSE: Mean Squared Error - Take differences between predicted & actual values, square them, then average.
+Squaring penalizes larger errors more heavily (outliers matter more).
+
+- Log Loss (Cross-Entropy Loss)
+If you’re 100% confident it’s a dog but it’s actually a cat, you get huge penalty.
+If you say “60% dog, 40% cat” and it’s cat, penalty is smaller.
+👉 Encourages well-calibrated probabilities.
+Punishes overconfident wrong predictions more than slightly wrong ones.
+
+
+
+Regularization (NOT DATA PREPROCESSING, USED IN MODEL TRAINING): 
+Technique to avoid overfitting. Penalty smoothness. Penalty added for high weight or high variance
+discourages overly complex models.
+Add a penalty term to loss function. Higher loss function, higher penalty term to smoothen out.
+Keeps model weights smaller → simpler model → better generalization.
+Penalizing memorization (Over-fitting), encouraging generalization
+
+L1 regularization: Lasso -> shrinks and can set some weights exactly to zero (feature selection).
+L2 regularization: Ridge regression -> shrinks all weights toward zero (none exactly zero).
+
+L2 (ridge) adds a quadratic cost to large weights → spreads penalty smoothly → keeps all features with smaller magnitudes. Great when many features have some signal or features are collinear (ridge is very stable with multicollinearity).
+L1 (lasso) adds an absolute value cost → has “kinks” at zero → optimizer often lands exactly on zero → automatic feature selection. Great when you suspect only a few features matter (sparsity).
+
+Use L1 when: sparse data, only few features matter, hence feature selection and some to 0
+Use L2 when: small effects from every feature, multi collinearity. Stability of importance required but not selection/elimination of features
+Can use both (Elastic L1+L2): to use both - shrinkage and maybe selection too
+
+Regularization for overfitting.
+
+For underfitting, 
+- add features, reduce regularization strength (might be over generalizing data), train longer, or use a more complex algorithm.
+
+So now, coming back to Boosting: 
+
+- Gradient Boosting : Every decision tree focusing on fixing errors of previous tree increasing accuracy. Medium sized datasets. Simplicity
+- XGBoost: Gradient Boosting but faster and better with L1/L2 regularization, parallel tree building, handles sparse data efficiently. Large datasets, structured tabular data. Accuracy+regularization
+- LightGBM: Like XGBoost but Fastest & most scalable. Best for massive datasets (10M+ rows) and high performance needs. Training on 10M+ clickstream records for ad predictions. Billions of user clicks processed daily → LightGBM is a natural fit.
+
+METRICS and EVALUATION:
+
+- Precision : TP / (TP+FP) Ex: In spam email tagged, how many were actually spam. Importance of precision. You don't want more FP (Spam emails)
+Precision can be important in systems where precision of flagging is more important than covering all false cases. Precision = focus on correctness of positive predictions.
+
+- Recall : TP / (TP+FN) Ex: Flagging patients as covid positive or negative. Covering all covid positive and putting them in isolation is important (even if some falsely tagged positive - annoying but safer)
+"How many of the positives were caught?" Recall important in systems where coverage of positives is important like above example
+Recall = focus on completeness of catching positives.
+
+- F1: Harmonic mean of both: 2*Precision.Recall/Precision + Recall. Good balance. Want both correction of data(high quality) and also coverage
+F1 = balance of both.
+
+- AUC = model ranking quality across thresholds.
+
+- Confusion Matrix = the raw truth table, from which everything else is derived.
+
+- Accuracy : TP + TN / (TP+TN+FP+FN)  great when data balanced, but misleading when imbalanced data

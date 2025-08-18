@@ -1,0 +1,445 @@
+Climbing stairs
+Qs: You are climbing a staircase. It takes n steps to reach the top.
+Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?
+
+Example:
+I/P: n=3, O/p: 3 (1step+1step+1step, 1step+2step, 2step+1step)
+
+- DP
+- Algo: Reaching a step i can be done in only 2 ways: single step from (i-1)th step or 2 steps from (i-2th) step
+- Hence, number of ways to reach ith step would be: numways reaching (i-th)step + numways reaching (i-2th) step
+
+- Create dp[] = new int[n+1]
+- dp[0] = 0 (zero ways to reach if n = 0)
+- dp[1] = 1 (only 1 way i.e. 1 step)
+- dp[2] = 2 (2 ways i.e. 1step+1step or 2step)
+- then loop: i=3; i<=n; i++
+    dp[i] = dp[i-1] + dp[i-2]
+- return dp[n]
+
+Time: O(n) Space: O(n)
+
+Another solution: This is basically fibonacci
+
+if(n==1)
+    return 1;
+
+first=1, second=2;
+for(int i = 3; i<=n; i++)
+    third = first+second;
+    first = second;
+    second = third;
+return second;
+
+Time: O(n) Space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Search in rotated Sorted array, find minimum in rotated sorted array
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Jump Game 1
+You are given an integer array nums. You are initially positioned at the array's first index, and each element in the array represents your maximum jump length at that position.
+Return true if you can reach the last index, or false otherwise.
+I/p: [2,3,1,1,4] O/P: true (Jump 1 step from index 0-1, then 3 steps from 1-4)
+
+Soln: 
+int n = nums.length;
+int lastIndexToReach = n-1
+loop from n-2 to 0:
+    if(nums[i] + i >= lastIndexToReach)
+        lastIndexToReach = i; //changed to current Index. If you reach this index means you can reach the end
+
+Time: O(n) Space: O(1)
+
+Jump Game 2
+Same as above question. Change, need to find minimum steps to reach destination
+
+Solution1: Minimum steps to reach step. Can do BFS shortest distance, using queue
+- visisted list for visited indexes
+- queue with int[] entry, [index, dist]. Add first element with 0 dist. [0,0]. mark index 0 as visited
+- while(queue is not empty)
+-   if polledElementIndex == destIndex, return polledElementDist
+-   if nums[polledElementindex] == 0 contine
+-   else loop for(int i=1; i<= nums[polledElementindex] && i+polledElementindex<=n-1; i++)
+-       if i+polledElementindex not visited, add in queue with dist as polledElementDist+1
+-           mark the added element index as visited
+
+Time: O(n) , Space: O(n)
+
+Solution2: Greedy
+if(n <= 1)
+    return 0;
+
+int jumps = 0;
+int farthest = 0;
+int currJumpEnd = 0;
+for(int i=0; i < n-1; i++) {
+    // If we cannot even get to i, the rest is unreachable
+    if(i > farthest)
+        return -1;    
+    //farthest = farthest you can reach from current level/window
+    farthest = Math.max(farthest, i+nums[i]);
+
+    // If we reached the end of the current window,
+    // we must do another jump to move to the next window.
+    if (i == currJumpEnd) {
+        jumps++;
+        currJumpEnd = farthest;
+
+        // Early exit: if the next window already reaches/passes the last index
+        if (currJumpEnd >= n - 1) 
+            break;
+    }            
+}
+return jumps;
+
+Time: O(n) Space: O(n)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Lc128 Longest Consecutive Sequence
+
+Given an unsorted array of integers nums, return the length of the longest consecutive elements sequence. 
+Input: nums = [100,4,200,1,3,2]
+Output: 4
+Explanation: The longest consecutive elements sequence is [1, 2, 3, 4]. Therefore its length is 4.
+
+Soln:
+Algo:
+longestLength=1; //1 element present
+Put every element in a set
+then iterate through elements in set:
+    if element-1 present in set 
+        continue;
+    else
+        currLength = 1;
+        currElem = element
+        while(currElem+1 present in set)
+            currLength++
+            currElem++
+        longestLength = Math.max(longestLength, currLength)
+return longestLength
+
+Time: O(n) Space: O(n)
+
+Another algo if we sort, then Time: O(nlogn) Space: O(logn) Arrays.sort takes O(logn) space
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC11. Container with Most Water
+You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).
+Find two lines that together with the x-axis form a container, such that the container contains the most water.
+Return the maximum amount of water a container can store.
+
+Ex:
+Input: height = [1,8,6,2,5,4,8,3,7]
+Output: 49
+Explanation: The above vertical lines are represented by array [1,8,6,2,5,4,8,3,7]. In this case, the max area of water (blue section) the container can contain is 49.
+
+Soln: 
+Algo: 2 pointer approach. left = 0, right = height.length-1
+maxArea = 0;
+
+while(left less than right) loop
+    leftBound = height[left], rightBound = height[right]
+    maxArea = Math.max(maxArea, (right-left) * Math.min(leftBound,rightBound))
+    if leftBound is less than equal to rightBound
+        left++;
+    else
+        right--
+return maxArea;
+
+Time: O(n) Space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 73. Set Matrix Zeroes
+Given an m x n integer matrix matrix, if an element is 0, set its entire row and column to 0's. You must do it in place.
+Example: I/P: matrix = [[1,1,1],[1,0,1],[1,1,1]] O/P: [[1,0,1],[0,0,0],[1,0,1]]
+
+soln: 
+1st way: Create separate boolean updated 2D matrix to differentiate between original 0 and updated 0
+Loop through 2D matrix
+    if you find 0 and it is not true in updated matrix, then it means it is original zero
+        then loop for whole row and column and make everything to zero and also updated to true for each of those cells
+        make updated true for original cell too
+int[][] updated = new int[rows][cols];
+
+for(int i=0; i<rows; i++) {
+    for(int j=0; j<cols; j++) {
+        if(matrix[i][j] == 0 && updated[i][j] == 0) {
+            updated[i][j] = 1;
+            //updating row to zero
+            for(int k=0;k<cols;k++) {
+                if(k == j || matrix[i][k] == 0 || updated[i][k] == 1)
+                    continue;
+                matrix[i][k] = 0;
+                updated[i][k] = 1;
+            }
+
+            //updating col to zero
+            for(int k=0; k<rows; k++) {
+                if(k == i || matrix[k][j] == 0 || updated[k][j] == 1)
+                    continue;
+                matrix[k][j] = 0;
+                updated[k][j] = 1;                    
+            }
+        }
+    }
+}
+Time: O(MxN) Space: O(MxN)
+
+2nd way: Time: O(MxN) Space: O(1)
+
+Make firstRow and firstCol indicators of making cell 0 or not
+First check for firstCol if any element is 0, then firstCol = true;
+Check for firstRow if any element is 0, then firstRow = true;
+
+loop from row=1 and col=1 to end
+    if cell = 0, then update col head and row head = 0 
+    i.e.
+    if(matrix[i][j] == 0)
+        matrix[0][j] = 0;
+        matrix[i][0] = 0;
+
+Again, now loop from row=1 and col=1 to end
+    if(matrix[i][j] == 0)
+        continue;
+    if(matrix[i][0] == 0 || matrix[0][j] == 0) //check if row head or col head is 0
+        matrix[i][j] = 0;
+
+Now, if firstRow = 0
+    loop to make all elements of firstRow = 0
+Also, if firstCol = 0
+    loop to make all elements of firstCol = 0;
+
+Time: O(MxN) Space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 226. Invert Binary Tree
+
+Given the root of a binary tree, invert the tree, and return its root.
+I/P: root = [4,2,7,1,3,6,9] O/P: [4,7,2,9,6,3,1]
+
+Soln: 
+Algo: Get queue and add root in queue. then for each node polled, swap their left and right child. and then add
+their children and repeat until no element left
+
+while queue is not empty
+    TreeNode polled = queue.poll;  
+    TreeNode temp = polled.left;
+    polled.left = polled.right;   //swap
+    polled.right = temp;          //swap
+    if(polled.left != null)
+        queue.offer(polled.left);
+    if(polled.right != null)
+        queue.offer(polled.right);
+return root;
+
+Time: O(n) - checking all nodes Space: O(n) using queue which can contain n nodes
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 124. Binary Tree Maximum Path Sum
+
+Soln: DFS Helper where you find maximum sum from left and right subtrre, compare it with a global variable. Then in that dfshelper, return max of left path or right path
+
+int maxPathSum = Integer.MIN_VALUE;
+public int maxPathSum(TreeNode root) {
+    dfsHelper(root);
+    return maxPathSum;
+}
+
+public int dfsHelper(TreeNode root) {
+    if(root == null)
+        return 0;
+    int pathGainFromLeft = Math.max(dfsHelper(root.left),0); //compare it with 0 because for negative values we consider that path not taken. Hence, 0
+    int pathGainFromRight = Math.max(dfsHelper(root.right),0);
+
+    maxPathSum = Math.max(maxPathSum, pathGainFromLeft+pathGainFromRight+root.val); //this will consider all cases, even if it's just a single node with no leaves
+    return root.val + Math.max(pathGainFromLeft, pathGainFromRight); /return maxPath from that node which can be either that node + leftsubtree or that node + rightsubtree
+}
+
+Time: O(n) Space: O(n) - recursive stack n nodes
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+LC297 Serialize Deserialize Binary Tree
+
+Qs: make 2 methods String serialize(TreeNode root) and TreeNode deserialize(String data)
+serialize-> Tree to string , deserialize-> string to Tree
+Whatever algo, should work together
+
+Solution:
+
+serialize(TreeNode root) : Use BFS
+if(root == null)
+    return "null"
+StringBuilder sb
+Create a queue and offer root first
+loop until queue gets Empty
+    TreeNode polled = queue.poll()
+    if polled is null
+        sb.append("null")
+        sb.append(",")
+    else
+        sb.append(polled.val)
+        sb.append(",")
+        queue.offer(polled.left);queue.offer(polled.right);
+
+result = sb.toString(); return result.substring(0,result.length()-1); //to remove last "," from end
+
+This would result as follows: 
+if tree is like
+
+       1
+    2     3
+       4     5      then string would be "1,2,3,null,null,4,5,null,null,null,null"
+
+
+deserialize(String data) : create nodes of every element and map according to index iterator
+
+String[] nodeStrings = data.split(",")
+if(nodeStrings.length == 1)  //this means only null present
+    return null
+
+TreeNode[] nodes = new TreeNode[nodeStrings.length] //create all nodeStrings to nodes in separate array
+loop through nodeStrings
+    if nodeStrings[i].equals("null")
+        nodes[i] = null
+    else
+        nodes[i] = new TreeNode(Integer.parseInt(nodeStrings[i]));
+
+int index=1; //index variable will be pointing at the correct child node for every node iterated
+
+for(int i=0; i<nodes.length; i++) {
+    if(nodes[i] != null) {
+        nodes[i].left = nodes[index++];   
+        nodes[i].right - nodes[index++];
+    }
+}
+return nodes[0]; //root
+
+Time: O(n) Space: O(n)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC300 Longest Increasing Subsequence
+Input: nums = [10,9,2,5,3,7,101,18]
+Output: 4
+Explanation: The longest increasing subsequence is [2,3,7,101], therefore the length is 4.
+
+Soln : 1-D DP
+Algo:
+- Create a dp array of length [n]. Fill it with 1
+- Keep a maxLIS variable
+- Every element in dp array means the length of LIS ending at that element
+- Loop i from 1 to n
+- Another nested loop k from 0 to i
+- for every k element < i element, dp[i] = Math.max(dp[i], dp[k]+1)
+- After k loop ends, maxLIS = Math.max(dp[i], maxLIS)
+- return maxLIS
+
+Time: O(n^2) - because of nested k loop Space: O(n) - dp array
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Lc152. Maximum Product Subarray
+find a subarray that has the largest product, and return the product
+
+Ip: nums = [2,3,-2,4] 
+op: 6 ([2,3] has the largest product 6)
+
+Solution:
+
+Algo: At every element, keep maxSoFar and minSoFar
+at every element, calculate maxSoFar and minSoFar, compare maxSoFar with a maxProduct variable every time. Return maxProduct variable
+
+Code: 
+int maxP = nums[0]; maxSoFar = nums[0]; minSoFar = nums[0];
+loop from 1 to n:
+    currwithmaxSoFar = nums[i]*maxSoFar
+    currwithminSoFar = nums[i]*minSoFar
+
+    maxSoFar = Math.max(nums[i], Math.max(currwithmaxSoFar,currwithminSoFar));
+    minSoFar = Math.min(nums[i], Math.min(currwithmaxSoFar,currwithminSoFar));
+
+    maxP = Math.max(maxP,maxSoFar);
+return maxP;
+
+Time: O(n) , space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 141. LinkedList Cycle
+Check if LL has cycle.
+
+Algo: 
+if(head == null || head.next ==null) return false;
+
+Node slow=head;fast=head.next
+while(fast==null&&fast.next==null)
+    if(slow==fast) return true;
+    slow=slow.next;fast=fast.next.next;
+
+return false;
+
+Time:O(n) space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 435. Non-overlapping Intervals
+Given an array of intervals intervals where intervals[i] = [starti, endi], return the minimum number of intervals you need to remove to make the rest of the intervals non-overlapping.
+
+Input: intervals = [[1,2],[2,3],[3,4],[1,3]]
+Output: 1
+Explanation: [1,3] can be removed and the rest of the intervals are non-overlapping.
+
+Soln: 
+- minIntervals=0;
+- Sort intervals by start time 
+- prevInterval = intervals[0]
+- loop from 1 to n
+    int[] currInteral = intervals[1];
+    if(currInterval[0] < prevInterval[1])
+        minIntervals++;
+        //then make the interval which has earlier endtime as prevInterval
+        prevInterval = (currInterval[1] < prevInterval[1])? currInterval: preInterval
+    else
+        //just update prevInterval to currInterval now. No removal
+        prevInterval = currInterval;
+- return minIntervals;
+
+Time: O(nlogn) for sorting Space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+LC19. Remove Nth Node from End of List
+Input: head = [1,2,3,4,5], n = 2
+Output: [1,2,3,5]
+
+Soln:
+Algo: 
+if(head == null || n == 0)
+    return head;
+
+Node front=head; back = head;
+for(int i=0;i < n; i++)
+    if(front==null)
+        //this means invalid value of n where n is greater than linkedlist length
+        return system error
+    front=front.next;
+
+if(front==null) //means n = linkedlist length. means remove first element
+    return head.next;
+
+while(front.next!=null)
+    front=front.next;
+    back=back.next;
+
+back.next = back.next.next;
+return head;
+
+Time: O(n) single pass Space: O(1)

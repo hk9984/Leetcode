@@ -11,7 +11,7 @@ while(n!= 0) :
     
     //next steop, abs subtract the original n with either lowerPower and higherPower, and check which is closer. Which ever is closer, take that difference and assign it to n
     // Every operation, do ops++. Do it till n becomes 0;
-    int closerPower = Math.abs(n - power) > Math.abs(n - higherPower) ? higherPower : power;
+    int closerPower = Math.abs(n - lowerPower) > Math.abs(n - higherPower) ? higherPower : lowerPower;
     n = Math.abs(n - closerPower);
     ops++;
 

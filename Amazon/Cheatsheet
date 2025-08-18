@@ -84,6 +84,32 @@ else listInterval = currInterval, add listInterval onto list. In the end, conver
 * Time: O(N⋅logN) coz of sorting. Space: O(N)
 
 
+LC 435. Non-overlapping Intervals
+Given an array of intervals intervals where intervals[i] = [starti, endi], return the minimum number of intervals you need to remove to make the rest of the intervals non-overlapping.
+
+Input: intervals = [[1,2],[2,3],[3,4],[1,3]]
+Output: 1
+Explanation: [1,3] can be removed and the rest of the intervals are non-overlapping.
+
+Soln: 
+- minIntervals=0;
+- Sort intervals by start time 
+- prevInterval = intervals[0]
+- loop from 1 to n
+    int[] currInteral = intervals[1];
+    if(currInterval[0] < prevInterval[1])
+        minIntervals++;
+        //then make the interval which has earlier endtime as prevInterval
+        prevInterval = (currInterval[1] < prevInterval[1])? currInterval: preInterval
+    else
+        //just update prevInterval to currInterval now. No removal
+        prevInterval = currInterval;
+- return minIntervals;
+
+Time: O(nlogn) for sorting Space: O(1)
+
+
+
 ----------------------------------------------------------------------------------------------------------------------------------------
         
 LinkedList
@@ -130,6 +156,34 @@ while(curr!=null) {
 return result;
 
 * Time: O(N) Space: O(1)
+
+LC19. Remove Nth Node from End of List
+Input: head = [1,2,3,4,5], n = 2
+Output: [1,2,3,5]
+
+Soln:
+Algo: 
+if(head == null || n == 0)
+    return head;
+
+Node front=head; back = head;
+for(int i=0;i < n; i++)
+    if(front==null)
+        //this means invalid value of n where n is greater than linkedlist length
+        return system error
+    front=front.next;
+
+if(front==null) //means n = linkedlist length. means remove first element
+    return head.next;
+
+while(front.next!=null)
+    front=front.next;
+    back=back.next;
+
+back.next = back.next.next;
+return head;
+
+Time: O(n) single pass Space: O(1)
 
 Qs Merge 2 sorted lists . Ex: list1 = [1,2,4], list2 = [1,3,4] -> [1,1,2,3,4,4]
 Ans Node dummy = new Node(-1);

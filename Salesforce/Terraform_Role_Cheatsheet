@@ -1,0 +1,302 @@
+* Step-by-step “story” of one deployment (WCNP)
+
+Dev push → running pod in ~plain English:
+
+You push a PR/commit to GitHub.
+
+KITT sees the event and starts a build for consumer (Docker).
+
+Docker build:
+
+copy CA roots and akeyless cert → set trust,
+
+apt & pip install deps from internal mirrors,
+
+create non-root user, copy app code,
+
+copy Sonar scanner and run Sonar (PR/branch aware),
+
+run pytest and report back,
+
+produce image consumer:<version>.
+
+KITT runs the Helm release in namespace tfo on the target cluster for the stage (e.g., useast-dev-az-001):
+
+sets env vars (API_URL, TF_ENGINE_URL, PINGFED_URI, etc.),
+
+mounts Akeyless secrets as files,
+
+creates a Deployment with container port 8080, probes on /health, resources (1 vCPU, up to 1Gi), and HPA (min 1, max 1),
+
+wires a Service + Ingress/VirtualService, registers CNAME with GSLB.
+
+Kubernetes pulls the image, starts pods.
+
+The pod becomes Ready after /health passes; traffic begins flowing from tfo-consumer-<env>.walmart.net → ingress → service port → targetPort 8080 → your uvicorn server.
+
+If the roll-out fails readiness/liveness, KITT auto-rolls back.
+
+
+EQUIVALENT IN AWS: 
+- Clusters - EKS
+- Image registry - ECR
+- Ingress+LB - AWS Load Balancer Controller (ALB)
+- TLS certs (in walmart Enterprise PKI) - ACM
+- Secrets - Akeyless same or AWS Secrets Manager
+- DNS - (GSLB cnames in WCNP) - Route 53
+
+EQUIVALENT IN GCP:
+- Clusters - GKE
+- Image Registry - Artifact Registry
+- Ingress + LB - GKE Ingress
+- TLS certs - Google-managed certificates
+- Secrets - Can be Secret Manager (+KMS)
+- DNS - (GSLB cnames in WCNP) - Cloud DNS
+
+Does the Dockerfile change?
+Usually, only a little. Your app still runs uvicorn on port 8080. What you’ll likely change:
+- Remove enterprise-only bits: internal apt mirrors (ark), internal CA (WMT.pem), internal pip.conf, internal Sonar/Looper endpoints.
+- Keep Akeyless trust chain if you still use Akeyless (you appended an Akeyless CA to certifi—that can stay).
+- Use public mirrors or your cloud’s artifact registry for Python wheels.
+- Don’t bake CI tools into the image (Sonar/pytest can run in CI). Keep the runtime image lean.
+- Everything else (non-root user, port 8080, probes) stays the same.
+
+If you still want to run with Akeyless, nothing in the Dockerfile forces a change—your mounts just come from the Secrets Store CSI Driver on EKS/GKE instead of WCNP’s secret injector.
+
+
+Step-by-step: how the flow differs
+
+* CI/CD
+
+WCNP → KITT orchestrates build/test/deploy.
+
+AWS: GitHub Actions/CodeBuild/CodePipeline/Argo CD build → push to ECR → deploy via Helm/kubectl.
+
+GCP: GitHub Actions/Cloud Build/Cloud Deploy/Argo CD build → push to Artifact Registry → deploy via Helm/kubectl.
+
+* Image pull
+
+WCNP pulls internal registry.
+
+EKS pulls ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/consumer:<tag>.
+
+GKE pulls REGION-docker.pkg.dev/PROJECT/REPO/consumer:<tag>.
+
+* Ingress + TLS + DNS
+
+WCNP GSLB terminates TLS 443 and routes to Service → Pod:8080.
+
+EKS: ALB Ingress Controller provisions an ALB, attaches an ACM cert, and points Route 53 name to ALB.
+
+GKE: GKE Ingress provisions a global HTTP(S) Load Balancer, attaches a ManagedCertificate, and points Cloud DNS name to LB.
+
+* Secrets
+
+WCNP mounts files from Akeyless per kitt.yml.
+
+EKS/GKE mount files with Secrets Store CSI Driver: choose provider Akeyless, AWS, or GCP. Your app reads the same filenames as before.
+
+* Workload Identity / IAM
+
+WCNP SSO under the hood.
+
+EKS: IRSA—KSA annotated with an IAM Role to let your pod access Secrets Manager/S3/etc.
+
+GKE: Workload Identity—KSA mapped to a Google Service Account for Secret Manager/Cloud Storage/etc.
+
+Everything inside K8s (Deployment, Service, HPA, probes, port 80→8080 mapping) works the same as you already have.
+
+
+********* Step-by-step “story” of one deployment (AWS EKS)
+
+You push a PR/commit to GitHub.
+
+CI kicks off (e.g., GitHub Actions or CodeBuild):
+
+Checks out repo.
+
+Logs in to Amazon ECR.
+
+Builds the Docker image from your Dockerfile.
+
+Runs static analysis/tests (Sonar, pytest) in CI (kept out of the final runtime image).
+
+Tags the image (e.g., consumer:<git-sha>), pushes to ECR.
+
+Helm deploy starts (Actions/CodePipeline/Argo CD):
+
+Uses kubeconfig for EKS cluster (env-specific).
+
+Loads env-specific Helm values (API_URL, TF_ENGINE_URL, PINGFED_URI, etc.).
+
+Sets .image.repository to your ECR repo and .image.tag to the just-built tag.
+
+Secrets are wired:
+
+If you stay with Akeyless: a Secrets Store CSI Driver volume references an Akeyless provider class; mount paths match your app’s expected filenames.
+
+If you switch to AWS Secrets Manager: another CSI provider class exposes secrets as files (or syncs to a native K8s Secret that you mount as env/volume).
+
+Pod identity/IAM:
+
+The app’s Kubernetes ServiceAccount is annotated for IRSA (IAM Role for Service Accounts).
+
+The IAM role grants exactly what the pod needs (e.g., read secrets, S3/Gateway access).
+
+Kubernetes objects are applied:
+
+Deployment with containerPort: 8080, probes at /health, resources (request 500Mi / limit 1Gi, CPU request/limit as needed).
+
+Service (ClusterIP) exposes port 80 → targetPort 8080.
+
+HorizontalPodAutoscaler (if enabled) sets min/max replicas.
+
+Optional PodDisruptionBudget, NetworkPolicy, etc.
+
+Ingress + Load Balancer:
+
+AWS Load Balancer Controller watches the Ingress and provisions an ALB.
+
+ACM certificate is attached to the ALB; listener terminates TLS on 443.
+
+Ingress routes 443 → Service:80 → Pod:8080.
+
+DNS:
+
+ExternalDNS creates/updates a Route 53 record (e.g., consumer.dev.example.com) to point at the ALB.
+
+Image pull & scheduling:
+
+Nodes pull the image from ECR.
+
+Scheduler places pods honoring resource requests.
+
+Readiness & traffic:
+
+Pod passes /health readinessProbe → becomes Ready.
+
+Traffic flows: consumer.dev.example.com → ALB(443 TLS) → Service:80 → Pod:8080 (uvicorn).
+
+Autoscaling & capacity (if configured):
+
+HPA scales pods based on CPU/QPS/custom metrics.
+
+Cluster Autoscaler/Karpenter adds nodes if the cluster needs capacity.
+
+Rollback safety:
+
+If readiness/liveness fail or SLOs dip, Helm/Kubernetes roll back to the previous ReplicaSet automatically (or your pipeline triggers helm rollback).
+
+
+********* Step-by-step “story” of one deployment (GCP GKE)
+
+You push a PR/commit to GitHub.
+
+CI kicks off (e.g., GitHub Actions or Cloud Build):
+
+Checks out repo.
+
+Auths to Artifact Registry.
+
+Builds the Docker image from your Dockerfile.
+
+Runs static analysis/tests in CI.
+
+Tags the image (e.g., consumer:<git-sha>), pushes to Artifact Registry (REGION-docker.pkg.dev/PROJECT/REPO/consumer:<tag>).
+
+Helm deploy starts (Actions/Cloud Deploy/Argo CD):
+
+Uses kubeconfig for GKE cluster (Standard or Autopilot).
+
+Loads env-specific Helm values (API_URL, TF_ENGINE_URL, PINGFED_URI, etc.).
+
+Sets .image.repository to your Artifact Registry image and .image.tag to the built tag.
+
+Secrets are wired:
+
+If you stay with Akeyless: use Secrets Store CSI Driver with Akeyless provider; mount as files at the same paths your app expects.
+
+If you switch to Google Secret Manager: GCP Secret Manager CSI mounts secrets as files (or sync to native K8s Secret).
+
+Pod identity/IAM:
+
+The app’s Kubernetes ServiceAccount is annotated for Workload Identity and bound to a Google Service Account (GSA).
+
+The GSA has permissions for any GCP APIs it needs (e.g., Secret Manager).
+
+Kubernetes objects are applied:
+
+Deployment with containerPort: 8080, probes at /health, resource requests/limits.
+
+Service (ClusterIP) exposes port 80 → targetPort 8080.
+
+HPA (if enabled) sets min/max replicas.
+
+Optional BackendConfig for LB health checks/timeouts.
+
+Ingress + Load Balancer:
+
+GKE Ingress (class gce) provisions a global HTTP(S) Load Balancer.
+
+A ManagedCertificate is attached; the LB terminates TLS on 443.
+
+Ingress routes 443 → Service:80 → Pod:8080 (via NEGs/NodePort under the hood).
+
+DNS:
+
+ExternalDNS creates/updates a Cloud DNS record (e.g., consumer.dev.example.com) to point at the global LB IP/hostname.
+
+Image pull & scheduling:
+
+Nodes pull the image from Artifact Registry.
+
+Scheduler places pods per resource requests and availability zones.
+
+Readiness & traffic:
+
+Pod passes /health readinessProbe → becomes Ready.
+
+Traffic flows: consumer.dev.example.com → GCLB(443 TLS) → Service:80 → Pod:8080 (uvicorn).
+
+Autoscaling & capacity:
+
+HPA scales pods out/in on CPU/custom metrics.
+
+Cluster Autoscaler (Standard) adds nodes if needed. (Autopilot manages nodes for you automatically.)
+
+Rollback safety:
+
+If rollout health checks fail or SLOs regress, Helm/Kubernetes roll back to the previous ReplicaSet (or your CD triggers helm rollback).
+
+
+
+
+
+-----------------------------------------------------------------------------------------------
+KUBERNETES
+
+Kubernetes (K8s) is like an automated warehouse for your app containers
+
+k8s cluster Architecture: 
+- Control Plane - managing state of cluster. This consists of etcd, Scheduler, ControllerManager, API Server
+- Containers
+- Pods - which run >=1 containers inside
+- Nodes - K8s cluster has set of machines called nodes. Nodes run pods
+- Scheduler - decides which node runs which pods/containers etc. schedules pods on worker nodes
+- API Server - primary interface between control plane and rest of cluster. Client can interact with them to get status of cluster. the front door; every change goes through here (CRUD on cluster state). kubectl talks to API server
+- Controller Manager - runs control loops (e.g., keep N replicas, handle node/pod lifecycles).
+- etcd - KV store. Cluster's persistent state like which resources available? what state of cluster changes etc.? Info about cluster. cluster’s desired + current state.
+
+Inside each Node: 
+- container runtime: runs container on nodes, pulling images from registry, starting/stopping containers
+- kubelet: daemon; receives instr from control plane to achieve and maintain desired state of pod like what pods to run on the node
+- kube-proxy: networking proxy on each node, LB and routing for pods inside the node
+
+
+Uses of K8s:
+- Self-healing: pod dies, k8s replaces
+- Rollouts and rollbacks
+- Auto-scaling of pods/containers
+- Service discovery and load balancing
+- Portability - same manifests across clouds/on-prem
+

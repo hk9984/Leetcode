@@ -16,3 +16,49 @@ while(n!= 0) :
     ops++;
 
 return ops;
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 894. All Possible Full Binary Trees
+Given an integer n, return a list of all possible full binary trees (0 or 2 children) with n nodes. Each node of each tree in the answer must have Node.val == 0.
+Each element of the answer is the root node of one possible tree. You may return the final list of trees in any order.
+
+Soln: 
+
+if n is even, not possible so return empty list in that case
+create map Map<Integer, List<TreeNode>> intToListMap to keep track of list for any value
+
+public List<TreeNode> allPossibleFBT(int n){
+    if(n%2 == 0)
+        retunr new ArrayList<TreeNode>();
+    
+        return dfsBuild(n);
+}
+
+- dfsBuild method takes in value n, builds tree and returns the list of root notes of all those trees
+
+public List<TreeNode> dfsBuild(int n) {
+    if(intToListMap.containsKey(n))
+        return intToListMap.get(n);   //if that value already has a list generated, return that
+    List<TreeNode> res = new ArrayList<>();
+
+    for(int leftTrees=0; leftTrees<n; leftTrees++) {
+        int rightTrees = n - 1 - leftTrees; //if n = 7 , leftTrees = 1, then rightTrees = 5 (n - 1 - leftTrees)
+        //create both list of left Trees and Right subtrees combinations
+        List<TreeNode> leftTreeNodes = dfsBuild(leftTrees);
+        List<TreeNode> rightTreeNodes = dfsBuild(rightTrees);
+        //make a new root, and join left and rightsubtrees in every combination
+        for(TreeNode leftRoot: leftTreeNodes) {
+            for(TreeNode rightRoot: rightTreeNodes) {
+                TreeNode root = new TreeNode(0);
+                root.left = leftRoot;root.right = rightRoot;
+                res.add(root);
+            }
+        }
+    }
+    intToListMap.put(n,res);
+    return res;
+}
+
+Time: O(2^n) Space: O(2^n)

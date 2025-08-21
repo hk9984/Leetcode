@@ -37,6 +37,24 @@ Time: O(n) Space: O(1)
 
 Search in rotated Sorted array, find minimum in rotated sorted array
 
+LC 875. Koko Eating Bananas
+Koko loves to eat bananas. There are n piles of bananas, the ith pile has piles[i] bananas. The guards have gone and will come back in h hours.
+Koko can decide her bananas-per-hour eating speed of k. Return the minimum integer k such that she can eat all the bananas within h hours.
+Input: piles = [3,6,7,11], h = 8
+Output: 4
+
+Solution: 
+
+Algo: Binary Search
+
+- If length of array is equal to h, the greatest element is the eating speed k. Return greatest element
+- Else
+- Binary search with left = 1 and right = max(array) . At every middle, check if all bananas can be eaten in time (create separate method where time taken at every pile is ceiling of pile/speed)
+-   If yes, then update a minSpeed variable to middle. Then do right = middle-1;
+-   If not, update left = middle+1;
+- return minSpeed in the end
+
+Time: O(n.logm) where m is max element. logm for binary search and within binary search, if banana can be eaten method run from 0 to n. Space: O(1)
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 Jump Game 1
@@ -443,3 +461,22 @@ back.next = back.next.next;
 return head;
 
 Time: O(n) single pass Space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Lc 417 Pacific Atlantic Water Flow
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC Reorder Log Files
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Lc Minimum Window substring
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Sofi Questions
+
+Lc Reverse LinkedList
+

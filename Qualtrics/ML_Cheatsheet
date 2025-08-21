@@ -21,7 +21,7 @@ Logistic Regression
 - Categorical output variable - using categorical or numerical input variable
 Ex: Predict gender of a persion based on height weight of a persion. Maybe using sigmoid function which gives probability output.
 Probability of a data point following in a particular class given the value of the i/p variable.
-Ex: probability of and adult with height 187cm to be a make can be 80%
+Ex: probability of and adult with height 187cm to be a male can be 80%
 
 
 k Nearest Neighbors (KNN) 

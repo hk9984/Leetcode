@@ -444,8 +444,9 @@ Union-Find DSA - to find disjoint sets or joining sets Ex ques. number of connec
 concept: every node in a set have 1 representative. To check if nodes are in the same set, their representatives should be the same.
 Otherwise they are in different sets. Optimize normal unionfind with path compression and union by rank
 class UnionFind {
-    int[] parent, rank;
+    int[] parent, rank, components;
     UnionFind(int n) {
+        components = n;
         loop from i=0 to n
             parent[i] = i; //each node parent of itself
             rank[i] = 0; every node at rank 0
@@ -460,9 +461,23 @@ class UnionFind {
     public void unionByRank(int nodeA, int nodeB) {
         int repNodeA = findRep(nodeA);
         int repNodeB = findRep(nodeB);
-        if(repNodeA == repNodeB)
-
+        if(repNodeA == repNodeB) return; //means same parents of nodeA and nodeB, so already connected
+        if(rank[repNodeA]>rank[repNodeB])
+            parent[repNodeB] = repNodeA;
+        else if(rank[repNodeB]>rank[repNodeA])
+            parent[repNodeA] = repNodeB;
+        else{ //at equal level, then one of the repNodes' rank will increase
+            parent[repNodeB] = repNodeA;
+            rank[repNodeA]++;
+        }
+        components--; //after every union, one independent component is decreased
     }
+}
+public int countComponents(int n, int[][] edges) {
+    UnionFind uf = new UnionFind(n);
+    for(int[] edge: edges)
+        uf.unionByRank(edge[0],edge[1]);
+    return uf.components; //return independent components
 }
 
 Time : O(alpha(n)) inverse ackermann function which steadily graduates and almost constant

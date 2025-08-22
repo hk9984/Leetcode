@@ -19,7 +19,8 @@ I/P: n=3, O/p: 3 (1step+1step+1step, 1step+2step, 2step+1step)
 
 Time: O(n) Space: O(n)
 
-Another solution: This is basically fibonacci
+Another solution: This is basically fibonacci. Or you can look at it like: you only need dp[i-1] and dp[i-2] values at every i.
+So instead of the whole dp array, just keep track of the previous 2 values at all times and update them accordingly
 
 if(n==1)
     return 1;
@@ -34,8 +35,73 @@ return second;
 Time: O(n) Space: O(1)
 
 ----------------------------------------------------------------------------------------------------------------------------------------
+LC 153. Find Minimum in rotated sorted array
+I/P: nums = [3,4,5,1,2] O/P: 1
 
-Search in rotated Sorted array, find minimum in rotated sorted array
+Soln: Binary Search
+
+the aim is to find values of left and right where nums[left] < nums[right] . this will mean the values between left and right will be sorted and not 
+rotated. And then, the nums[left] will be lowest for that array at that point
+
+Algo:
+min = Integer.MAX_VALUE
+left = 0, right = nums.length-1
+
+while(left<=right && nums[left] > nums[right]) //looping till we see rotated array
+    int mid = left + (right-left)/2
+    if(nums[mid] >= nums[left])
+        //this means left half is sorted where left value is lower than mid. And as left value is higher than right value, then min is definitely in the right half
+        left=mid+1;
+        min = Math.min(min, nums[left]);
+    
+else 
+    //this means right half is sorted. Now if right half is sorted, then nums[mid] is the lowest value of the right half. So, compare nums[mid] with min, and then check to the left of mid
+    right=mid-1;
+    min = Math.min(min, nums[mid]);
+
+//outside loop. This means found an array where nums[left] <= nums[right]. so compare with ans just in case this is the lowest value
+min = Math.min(min, nums[left]);
+return min;
+
+Time: O(logn) binary search, space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+LC 33. Search in Rotated Sorted Array
+I/p: nums = [4,5,6,7,0,1,2] target = 0  O/P: 4
+
+soln: Binary Search
+
+left=0
+right=nums.length-1
+
+while(left<=right):
+    int mid = left + (right-left)/2
+    if(nums[mid] == target)
+        return mid;
+    
+    if(nums[mid] >= nums[left]) {
+        //this means left half is sorted. Now if target value is in between nums[left] and nums[mid], then check left half. Otherwise check right half
+        if(target >= nums[left] && target < nums[mid])
+            right=mid-1;
+        else
+            left=mid+1;
+    }
+
+    else {
+        //this means right half is sorted. Now if target value is in between nums[mid] and nums[right], then check right half. Else check left half
+        if(target>nums[mid] && target <= nums[right])
+            left=mid+1;
+        else
+            right=mid-1;
+    }
+
+    return -1; //target not found
+
+
+Time: O(logn) binary search. Space: O(1)
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
 
 LC 875. Koko Eating Bananas
 Koko loves to eat bananas. There are n piles of bananas, the ith pile has piles[i] bananas. The guards have gone and will come back in h hours.
@@ -461,6 +527,11 @@ back.next = back.next.next;
 return head;
 
 Time: O(n) single pass Space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------
+LC295 Find Median from Data Stream
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 

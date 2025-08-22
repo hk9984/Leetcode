@@ -465,7 +465,7 @@ Algo:
 if(head == null || head.next ==null) return false;
 
 Node slow=head;fast=head.next
-while(fast==null&&fast.next==null)
+while(fast!=null&&fast.next!=null)
     if(slow==fast) return true;
     slow=slow.next;fast=fast.next.next;
 

@@ -277,9 +277,19 @@ Time: O(MxN) Space: O(MxN)
 
 2nd way: Time: O(MxN) Space: O(1)
 
-Make firstRow and firstCol indicators of making cell 0 or not
+idea: Make firstRow and firstCol indicators of making cell 0 or not
 First check for firstCol if any element is 0, then firstCol = true;
 Check for firstRow if any element is 0, then firstRow = true;
+Whole Algo: 
+- First check in first Row, if any element zero, then firstRow = true
+- Similar check in first Column, if any element zero, then firstCol = true
+- Now iterate from i=1,j=1 to every cell (excluding the first row and column)
+    if any element 0, make the row head and column head 0 (if matrix[i][j] == 0 then matrix[i][0] = 0 and matrix[0][j] = 0)
+- Now again iterate from i=1, j=1 to every cell
+    wherever either the row head or column head = 0, make matrix[i][j]=0
+- in the end, if firstRow=true, make all elements of firstRow=0 (matrix[0][j] = 0)
+- similarly, if firstCol=true, make all elements of firstCol=0 (matrix[i][0] = 0)
+
 
 loop from row=1 and col=1 to end
     if cell = 0, then update col head and row head = 0 
@@ -324,6 +334,39 @@ while queue is not empty
 return root;
 
 Time: O(n) - checking all nodes Space: O(n) using queue which can contain n nodes
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 98. Validate BST
+Given the root of a binary tree, determine if it is a valid binary search tree (BST).
+
+A valid BST is defined as follows:
+
+The left subtree of a node contains only nodes with keys strictly less than the node's key.
+The right subtree of a node contains only nodes with keys strictly greater than the node's key.
+Both the left and right subtrees must also be binary search trees.
+
+Soln: 
+At every node, it should be within the upperlimit and lowerlimit 
+- upperLimit and lowerLimit because: a node should not only be either greater or less than its parent, but also should be either greater or less than the root node of that branch (or grandparent). 
+- At means at every hierarchy, the node should be within the limits
+
+
+public boolean isValidBST(TreeNode root) {
+    return validate(root, null, null);
+}
+
+public boolean validate(TreeNode root, Integer upperLimit, Integer lowerLimit) {
+    if(root == null)
+        return true;
+
+    if((lowerLimit != null && root.val <= lowerLimit) || (upperLimit != null && root.val >= upperLimit))
+        return false;
+
+    return validate(root.left, root.val, lowerLimit) && validate(root.right, upperLimit, root.val);
+}
+
+Time: O(n) checking all nodes Space: O(n) skewed tree and also stack trace for all nodes
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -426,6 +469,26 @@ Algo:
 - for every k element < i element, dp[i] = Math.max(dp[i], dp[k]+1)
 - After k loop ends, maxLIS = Math.max(dp[i], maxLIS)
 - return maxLIS
+
+Code: 
+public int lengthOfLIS(int[] nums) {
+
+    if(nums.length < 2)
+        return nums.length;
+    int maxLIS = 1;
+    int[] dp = new int[nums.length];
+    Arrays.fill(dp, 1);
+
+    for(int i=1; i<nums.length; i++) {
+        for(int k=0; k<i; k++) {
+            if(nums[k] < nums[i])
+                dp[i] = Math.max(dp[i], dp[k]+1);
+        }
+        maxLIS = Math.max(maxLIS, dp[i]);
+    }
+    return maxLIS;
+    
+}
 
 Time: O(n^2) - because of nested k loop Space: O(n) - dp array
 
@@ -532,6 +595,44 @@ Time: O(n) single pass Space: O(1)
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 LC295 Find Median from Data Stream
+The median is the middle value in an ordered integer list. If the size of the list is even, there is no middle value, and the median is the mean of the two middle values.
+
+For example, for arr = [2,3,4], the median is 3.
+For example, for arr = [2,3], the median is (2 + 3) / 2 = 2.5.
+
+Implement MedianFinderClass: 
+MedianFinder() initializes the MedianFinder object.
+void addNum(int num) adds the integer num from the data stream to the data structure.
+double findMedian() returns the median of all elements so far. Answers within 10^-5 of the actual answer will be accepted.
+
+
+Solution:
+2 priority queues used. lowerHalfMaxHeap and upperHalfMinHeap 
+lowerHalfMaxHeap can have size 1 greater than upperHalfMinHeap (in case if the n is odd, value will be lowerHalfMaxHeap.peek())
+In case of both priority queues of same size, the answer will be avg of lowerHalfMaxHeap.peek() and upperHalfMinHeap.peek()
+
+Main logic for addNum method:
+Any element first added in lowerHalfMaxHeap
+next, max value from lowerHalfMaxHeap pushed to upperHalfMinHeap like such: upperHalfMinHeap.add(lowerHalfMaxHeap.poll())
+next, if upperHalfMinHeap.size() > lowerHalfMaxHeap, then min value from upperHalfMinHeap is pushed to lowerHalfMaxHeap like such: lowerHalfMaxHeap.add(upperHalfMinHeap.poll())
+
+Main logic for findMedian method:
+if lowerHalfMaxHeap.size() == upperHalfMinHeap.size(), this means number of values in the stream are even. 
+Hence, return (double)(lowerHalfMaxHeap.peek() + upperHalfMinHeap.peek())/2.0
+else //this means lowerHalfMaxHeap.size() is 1 greater than upperHalfMinHeap which means number of values in stream are odd
+Hence, return middle element which will be return (double)lowerHalfMaxHeap.peek()
+
+Time: O(logn) 
+Explanation: At worst there are 3 heap insertion and 2 deletions in addNum method. 
+addNum method:
+- lowerHalfMaxHeap.add(num) - Heap Insertion 1 (logn)
+- upperHalfMinHeap.add(lowerHalfMaxHeap.poll()) - Heap Insertion 2, Heap deletion 1 (logn + logn)
+- if(upperHalfMinHeap.size() > lowerHalfMaxHeap.size())
+- then, lowerHalfMaxHeap.add(upperHalfMinHeap.poll()) - Heap Insertion 3, Heap deletion 2 (logn + logn)
+    
+Hence, time complexity - O(5.logn) -> O(logn)
+
+Space: O(n) - to hold all n values in 2 queues
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -544,6 +645,40 @@ LC Reorder Log Files
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 Lc Minimum Window substring
+Input: s = "ADOBECODEBANC", t = "ABC"
+Output: "BANC"
+Explanation: The minimum window substring "BANC" includes 'A', 'B', and 'C' from string t.
+
+Solution: Sliding Window
+
+Steps: 
+
+- Create map for character count in string t . Map<Character, Integer> charCountT
+- int need = charCountT.size() - this means distinct characters needed to be fulfilled
+- create map for windowS which will be sliding window char count . Map<Character, Integer> windowS
+- left=0, right=0, finalLeft=0, finalRight=0 (left and right sliding window bounds, finalLeft finalRight min window bounds)
+- int minWindow = Integer.MAX_VALUE (Initial value) . If in the end minWindow is still Integer.MAX_VALUE, then return ""; (this means no min window found)
+- loop - while(right<sArr.length)
+    currChar = sArr[right]; add in windowS
+    check if currChar is present in charCountT and windowS.get(currChar).intValue() == charCountT.get(currChar).intValue()
+        then have++;
+    
+    now loop while(have == need):
+            //this means found one window
+            if(right-left+1 < minWindow)
+                then update finalLeft and finalRight and minWindow = right-left+1
+            
+            char leftChar = sArr[left]
+            remove this character from window: windowS.put(leftChar, windowS.get(leftChar)-1)
+            now check with charCountT and if it changed to less, reduce have: if(charCountT.containsKey(leftChar) && windowS.get(leftChar).intValue() < charCountT.get(leftChar).intValue()) , then have--
+            left++
+    
+    now after every process, right++ (this is outside have==need loop but inside right<sArr.length loop)
+- In the end, check if minWindow != Integer.MAX_VALUE, then return s.substring(finalLeft, finalRight+1). else return ""
+
+
+Time: O(s + t) where s and t are lengths of s and t strings . Space: O(s + t) saving character counts of each s and t
+
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 

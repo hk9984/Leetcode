@@ -134,10 +134,51 @@ Time: O(logn)  Space: O(1) constant space with no set
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 Lc 2303. Calculate amount paid in taxes
+Example:
+Input: brackets = [[3,50],[7,10],[12,25]], income = 10
+Output: 2.65000
+Explanation:
+Based on your income, you have 3 dollars in the 1st tax bracket, 4 dollars in the 2nd tax bracket, and 3 dollars in the 3rd tax bracket.
+The tax rate for the three tax brackets is 50%, 10%, and 25%, respectively.
+In total, you pay $3 * 50% + $4 * 10% + $3 * 25% = $2.65 in taxes.
 
 Basic array moving through calculation
 Created separate Bucket class for ease. Kept track of previous Upper bound at all time for calculation for current bracket
 double return so tax calculation should have (double) typecasting
+
+class Bracket {
+    int upperBound;
+    int tax;
+    Bracket(int u, int t) {
+        upperBound = u;
+        tax = t;
+    }
+}
+class Solution {
+    public double calculateTax(int[][] brackets, int income) { 
+        double tax = 0.0;
+
+        if(brackets.length == 0 || income == 0)
+            return tax;
+        Bracket[] bracketsArr = new Bracket[brackets.length];
+        int index=0;
+
+        for(int[] br: brackets)
+            bracketsArr[index++] = new Bracket(br[0], br[1]);
+        int prevUpperBound = 0;
+
+        for(Bracket bracket: bracketsArr) {
+            int currBracket = bracket.upperBound - prevUpperBound;
+            int currTaxableVal = (income > currBracket) ? currBracket : income;
+            tax += (double)(currTaxableVal * bracket.tax/100.0);
+            income = income - currBracket;
+            prevUpperBound = bracket.upperBound;
+            if(income <= 0)
+                break;
+        }
+        return tax;
+    }
+}
 
 Time: O(n) Space: O(n) becasue created separate Bucket array
 
@@ -235,7 +276,6 @@ Explanation: The figure above represents the given graph and the time required t
 We start course 1 and course 2 simultaneously at month 0.
 Course 1 takes 3 months and course 2 takes 2 months to complete respectively.
 Thus, the earliest time we can start course 3 is at month 3, and the total time required is 3 + 5 = 8 months.
-
 
 
 solution: Topo Sort with extra finish array which keeps finish time for each course (finish time updated when all previous courses completed)
@@ -345,10 +385,26 @@ Time: O(rowsxcols) Space: O(rowsxcols)
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------
-
-
 Lc 635. Design Log Storage System
+Example:
+Input
+["LogSystem", "put", "put", "put", "retrieve", "retrieve"]
+[[], [1, "2017:01:01:23:59:59"], [2, "2017:01:01:22:59:59"], [3, "2016:01:01:00:00:00"], ["2016:01:01:01:01:01", "2017:01:01:23:00:00", "Year"], ["2016:01:01:01:01:01", "2017:01:01:23:00:00", "Hour"]]
+Output
+[null, null, null, null, [3, 2, 1], [2, 1]]
 
+Explanation
+LogSystem logSystem = new LogSystem();
+logSystem.put(1, "2017:01:01:23:59:59");
+logSystem.put(2, "2017:01:01:22:59:59");
+logSystem.put(3, "2016:01:01:00:00:00");
+
+// return [3,2,1], because you need to return all logs between 2016 and 2017.
+logSystem.retrieve("2016:01:01:01:01:01", "2017:01:01:23:00:00", "Year");
+
+// return [2,1], because you need to return all logs between Jan. 1, 2016 01:XX:XX and Jan. 1, 2017 23:XX:XX.
+// Log 3 is not returned because Jan. 1, 2016 00:00:00 comes before the start of the range.
+logSystem.retrieve("2016:01:01:01:01:01", "2017:01:01:23:00:00", "Hour");
 
 /**
  * TreeMap solution:
@@ -404,12 +460,9 @@ class LogSystem {
 
     public void put(int id, String timestamp) {
         // append id into the list at this timestamp
-        List<Integer> bucket = timeToIds.get(timestamp);
-        if (bucket == null) {
-            bucket = new ArrayList<Integer>();
-            timeToIds.put(timestamp, bucket);
-        }
-        bucket.add(id);
+        if(!timeToIds.containsKey(timestamp))
+            timeToIds.put(timestamp, new ArrayList<>());
+        timeToIds.get(timestamp).add(id);
     }
 
     public List<Integer> retrieve(String start, String end, String granularity) {
@@ -578,7 +631,7 @@ public List<Integer> findAnagrams(String s, String p) {
 }
 
 Time: O(len(s)) - One pass over string s. 
-Space: O(K) - K distinct elements . However, it can be 26 as pCount and sCount are 26 length always
+Space: O(K) - K distinct elements . However, it can be 26 as pCount and sCount are 26 length always so equiv. to O(1)
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -835,4 +888,75 @@ public class FileSystem {
 NOTE: 
 - If ls is rare and lookups/appends are frequent, HashMap + sort (with StringBuilder) is a solid choice.
 - If ls is frequent (or you need stable ordering/pagination), the TreeMap version
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+LC 116: Populating Next Right Pointers in Each Node
+NOTE: Tree is perfect binary
+
+class Solution {
+    //Time: O(n) processing each node exactly once
+    //Space: O(1) no additional data structure
+    public Node connect(Node root) {
+        if(root == null || root.left == null)
+            return root;
+
+        Node curr = root;
+        Node nextLevelNode = curr.left;
+
+        while(curr != null && nextLevelNode != null) {
+            //1st connection - connecting left child to right in the same subtree
+            curr.left.next = curr.right;
+            if(curr.next != null) {
+                //second connection - connecting right child next to the other subtree left child at the same level
+                curr.right.next = curr.next.left;
+                curr = curr.next;
+            }
+            else {
+                //Moving onto the next level
+                curr = nextLevelNode;
+                nextLevelNode = curr.left;
+            }
+        }
+
+        return root;
+    }
+}
+Time: O(n) Space: O(1)
+
+LC117. Populating Next Right Pointers in Each Node II 
+NOTE: Tree is not perfect Binary
+
+class Solution {
+    public Node connect(Node root) {
+        
+        Node head = root;
+        while(head != null) {
+            Node dummy = new Node(0);
+            Node tail = dummy;
+            for(Node curr = head; curr != null; curr = curr.next) {
+                if(curr.left != null) {
+                    tail.next = curr.left;
+                    tail = tail.next;
+                }
+                if(curr.right != null) {
+                    tail.next = curr.right;
+                    tail = tail.next;
+                }
+            }
+            head = dummy.next; //outside for loop, inside while
+        }
+        return root; //outside while
+    }
+}
+
+Time: O(n) Space: O(1)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 

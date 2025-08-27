@@ -1,0 +1,464 @@
+LC 2096 Step-By-Step Directions From a Binary Tree Node to Another
+
+Given Binary Tree with root, startVal and destVal. Need to return a string which is a path from start to dest with 'U', 'L', 'R'
+
+Input: root = [5,1,2,3,null,6,4], startValue = 3, destValue = 6
+Output: "UURL"
+Explanation: The shortest path is: 3 → 1 → 5 → 2 → 6.
+
+TreeVisual 
+
+        5
+      /   \
+    1       2
+   /       /  \
+  3       6    4
+
+
+Algo: 
+First find LCA for source and dest node. Then buildPath with StringBuilder and backtracking for LCA to startNode, and then LCA to destNode(both paths using 'L' and 'R')
+Then in a result StringBuilder, replace characters of Lca-startNode path with 'U' and append it with Lca-destNode path. Return that string
+
+class Solution {
+    public TreeNode getLCA(TreeNode root, int startValue, int destValue) {
+        if(root == null || root.val == startValue || root.val == destValue)
+            return root;
+        TreeNode leftLCA = getLCA(root.left, startValue, destValue);
+        TreeNode rightLCA = getLCA(root.right, startValue, destValue);
+        if(leftLCA != null && rightLCA != null)
+            return root;
+        return (leftLCA != null) ? leftLCA: rightLCA;
+    }
+    public boolean buildPath(TreeNode root, int searchVal, StringBuilder path) {
+        if(root == null)
+            return false;
+        if(root.val == searchVal)
+            return true;
+        //try left branch
+        path.append('L');
+        if(buildPath(root.left, searchVal, path))
+            return true;
+        path.deleteCharAt(path.length()-1);
+
+        //try right branch
+        path.append('R');
+        if(buildPath(root.right, searchVal, path))
+            return true;
+        path.deleteCharAt(path.length()-1);
+
+        //couldn't find the searchVal in the current branch
+        return false;
+    }
+    public String getDirections(TreeNode root, int startValue, int destValue) {
+        TreeNode lca = getLCA(root, startValue, destValue);
+        if(lca == null)
+            return "";
+
+        StringBuilder lcaToStart = new StringBuilder();
+        StringBuilder lcaToEnd = new StringBuilder();
+        buildPath(lca, startValue, lcaToStart);
+        buildPath(lca, destValue, lcaToEnd);
+
+        StringBuilder res = new StringBuilder();
+        for(int i=0; i<lcaToStart.length(); i++)
+            res.append('U');
+
+        res.append(lcaToEnd);
+        return res.toString();
+    }
+}
+
+Time: O(n) iterate through all nodes. Space: O(h) height of tree which can be worst case O(n) when skewed tree (logn if balanced)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 202. Happy Number . true if number happy, else false
+Happy Number:
+- replace number with sum of square of digits
+- Repeat process until number becomes 1 (true) or cycle detected (false)
+
+Ex: 
+Input: n = 19
+Output: true
+Explanation:
+1^2 + 9^2 = 82
+8^2 + 2^2 = 68
+6^2 + 8^2 = 100
+1^2 + 0^2 + 0^2 = 1
+
+Soln: 
+Solution1: Using hashset. Keep storing version of numbers after every squaring of digits. If any time number repeated (set.contains(n) == true), hence cycle detected. Return false
+Else whenever 1 reached, true
+
+Set<Integer> set = new HashSet<>();
+
+while(true)
+    if(set.contains(n)) return false; //cycle detected
+    set.add(n);
+    int sum=0
+    while(n>0)
+        sum += (n%10) * (n%10)
+        n = n/10
+    if(sum == 1)
+        break;
+
+return true; //sum reached 1
+
+Time: log(n) Space: also based on calculation so O(logn)
+
+Solution2: Using Floyd cycle detection. separate sq calculation method and flow and fast values. Fast - 2steps, slow-1 step.
+if slow=fast at any step, return false. Any step n becomes 1, return true;
+
+public int sumSq(int n) {
+    int sum = 0;
+    while(n>0) {
+        sum += (n%10) * (n%10);
+        n = n/10;
+    }
+    return sum;
+}
+public boolean isHappy(int n) {
+    int slow = n;
+    int fast = sumSq(n);
+    while(fast != 1) {
+        if(fast == slow)
+            break;
+        slow = sumSq(slow);
+        fast = sumSq(sumSq(fast));
+    }
+    return fast == 1;
+}
+
+Time: O(logn)  Space: O(1) constant space with no set
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Lc 2303. Calculate amount paid in taxes
+
+Basic array moving through calculation
+Created separate Bucket class for ease. Kept track of previous Upper bound at all time for calculation for current bracket
+double return so tax calculation should have (double) typecasting
+
+Time: O(n) Space: O(n) becasue created separate Bucket array
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 1600. Throne Inheritance
+
+Tree data structure creation with hashmap
+
+Time: O(n) Space: O(n)
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 2050. Parallel Courses III
+n-courses labeled 1 to n, relations[][] = [prevCourse, nextCourse], time[] = denotes months it takes to complete (i+1)th course
+Find minimum number of months needed to complete all courses
+
+Example:
+Input: n = 3, relations = [[1,3],[2,3]], time = [3,2,5]
+Output: 8
+Explanation: The figure above represents the given graph and the time required to complete each course. 
+We start course 1 and course 2 simultaneously at month 0.
+Course 1 takes 3 months and course 2 takes 2 months to complete respectively.
+Thus, the earliest time we can start course 3 is at month 3, and the total time required is 3 + 5 = 8 months.
+
+
+
+solution: Topo Sort with extra finish array which keeps finish time for each course (finish time updated when all previous courses completed)
+Keep one global max finish time variable to return
+
+public int minimumTime(int n, int[][] relations, int[] time) {
+
+    List<List<Integer>> adjList = new ArrayList<>();
+    int[] indegree = new int[n+1];
+    for(int i=0; i<=n; i++)
+        adjList.add(new ArrayList<>());
+
+    for(int[] relation: relations) {
+        adjList.get(relation[0]).add(relation[1]);
+        indegree[relation[1]]++;
+    }
+
+    int[] finish = new int[n+1];
+    Queue<Integer> queue = new LinkedList<>();
+    for(int i=1; i<=n; i++) {
+        if(indegree[i] == 0) {
+            queue.offer(i);
+            finish[i] = time[i-1];
+        }
+    }
+    int minTime = 0;
+    while(!queue.isEmpty()) {
+        int course = queue.poll();
+        minTime = Math.max(minTime, finish[course]);
+        for(int nextCourse: adjList.get(course)) {
+            indegree[nextCourse]--;
+            finish[nextCourse] = Math.max(finish[nextCourse], finish[course] + time[nextCourse-1]);
+            if(indegree[nextCourse] == 0)
+                queue.offer(nextCourse);
+        }
+    }
+
+    return minTime;
+}
+
+Time: O(n + e) where n is no of courses , e is edges which is relations.length . Space: O(n + e) for adjacency list, indegree and queue
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 1233. Remove Sub-Folders from the Filesystem
+Given a list of folders folder, return the folders after removing all sub-folders in those folders. You may return the answer in any order.
+Ex: 
+Input: folder = ["/a","/a/b","/c/d","/c/d/e","/c/f"]
+Output: ["/a","/c/d","/c/f"]
+Explanation: Folders "/a/b" is a subfolder of "/a" and "/c/d/e" is inside of folder "/c/d" in our filesystem.
+
+Solution: Basic Trie with children as map <String, TrieNode> 
+Search method to return true and false for every folder in list of folders. Only add the true ones in result
+
+Time: O(N x L) where N: number of folders, L be maximum length of folder. For both checking and building
+Space: O(N x L) in worst case if all folders are unique with L length
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 695. Max Area of Island
+The area of an island is the number of cells with a value 1 in the island.
+Return the maximum area of an island in grid. If there is no island, return 0.
+
+Example: 
+Input: grid = [[1,1,1],[1,0,0]]
+Output: 4
+
+Solution: 
+Same DFS like numberofIslands question. However, dfs should return int when currArea updates to new value. maxArea global variable checking area every time
+
+class Solution {
+    int maxArea;
+    int[][] dirs = {{0,1}, {0,-1}, {1,0}, {-1,0}};
+    public int dfs(int[][] grid, int row, int col, int totalRows, int totalCols, boolean[][] visited, int currArea) {
+        visited[row][col] = true;
+        for(int[] dir: dirs) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+            if(newRow>=0 && newRow<totalRows && newCol>=0 && newCol<totalCols && grid[newRow][newCol]==1 && !visited[newRow][newCol]) {
+                currArea = dfs(grid, newRow, newCol, totalRows, totalCols, visited, currArea+1);
+            }
+        }
+        return currArea;
+    }
+
+    public int maxAreaOfIsland(int[][] grid) {
+        maxArea = 0;
+        if(grid.length == 0 || grid[0].length == 0)
+            return maxArea;
+        int rows = grid.length;
+        int cols = grid[0].length;
+        boolean[][] visited = new boolean[rows][cols];
+
+        for(int i=0; i<rows; i++) {
+            for(int j=0; j<cols; j++) {
+                if(grid[i][j] == 1 && !visited[i][j]) {
+                    int area = dfs(grid,i,j,rows,cols,visited,1);
+                    maxArea = Math.max(maxArea, area);
+                }
+            }
+        }
+        return maxArea;
+    }
+}
+
+Time: O(rowsxcols) Space: O(rowsxcols)
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+Lc 635. Design Log Storage System
+
+
+/**
+ * TreeMap solution:
+ * - Store logs in a TreeMap keyed by FULL timestamp (kept sorted lexicographically).
+ * - For retrieve, construct lexicographic lower/upper bounds from (start, end, granularity)
+ *   by appending minimal/maximal suffixes after the chosen prefix.
+ * - Use subMap(lower, true, upper, true) to stream matching logs in time order.
+ *
+ * Time:
+ *   - put: O(log n)
+ *   - retrieve: O(log n + k) where k is number of matched logs (already sorted).
+ * Space: O(n)
+ */
+class LogSystem {
+
+    // granularity -> prefix length (same as above)
+    private final Map<String, Integer> granToLen = new HashMap<String, Integer>() {{
+        put("Year",   4);
+        put("Month",  7);
+        put("Day",   10);
+        put("Hour",  13);
+        put("Minute",16);
+        put("Second",19);
+    }};
+
+    // For each granularity, what minimal/maximal suffix to append so that the final
+    // lexicographic range includes all timestamps in that granularity bucket.
+    // Note: we use '00' for min and '99' for max as "safe" lexicographic caps.
+    private final Map<String, String> minSuffix = new HashMap<String, String>() {{
+        put("Year",   ":00:00:00:00:00");
+        put("Month",  ":00:00:00:00");
+        put("Day",    ":00:00:00");
+        put("Hour",   ":00:00");
+        put("Minute", ":00");
+        put("Second", ""); // exact second; no suffix
+    }};
+
+    private final Map<String, String> maxSuffix = new HashMap<String, String>() {{
+        put("Year",   ":99:99:99:99:99");
+        put("Month",  ":99:99:99:99");
+        put("Day",    ":99:99:99");
+        put("Hour",   ":99:99");
+        put("Minute", ":99");
+        put("Second", ""); // exact second; no suffix
+    }};
+
+    // TreeMap keeps timestamps sorted; multiple ids can have same timestamp
+    private final TreeMap<String, List<Integer>> timeToIds;
+
+    public LogSystem() {
+        timeToIds = new TreeMap<String, List<Integer>>();
+    }
+
+    public void put(int id, String timestamp) {
+        // append id into the list at this timestamp
+        List<Integer> bucket = timeToIds.get(timestamp);
+        if (bucket == null) {
+            bucket = new ArrayList<Integer>();
+            timeToIds.put(timestamp, bucket);
+        }
+        bucket.add(id);
+    }
+
+    public List<Integer> retrieve(String start, String end, String granularity) {
+        // Build lower/upper bounds from granularity
+        int len = granToLen.get(granularity);
+        String lower = start.substring(0, len) + minSuffix.get(granularity);
+        String upper = end.substring(0, len) + maxSuffix.get(granularity);
+
+        // TreeMap.subMap gives keys in ascending order within [lower, upper]
+        NavigableMap<String, List<Integer>> window =
+            timeToIds.subMap(lower, true, upper, true);
+
+        List<Integer> ans = new ArrayList<Integer>();
+        for (Map.Entry<String, List<Integer>> e : window.entrySet()) {
+            // IDs in the same timestamp can be appended in insertion order
+            ans.addAll(e.getValue());
+        }
+        return ans; // already time-ascending by design
+    }
+}
+
+Time: O(logn + k) - logn because of treemap for every insert and, also in the submap method -> Finding the starting key (lower) and ending key (upper) requires 2 binary searches in the tree → O(log n).
+ O(k) - because if k timestamps found matching in the window, iterating through those and adding all values (which are list of ids) in the ans list
+
+Space: O(n) key value pair for every timestamp
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Lc 1235. Maximum Profit in Job Scheduling
+
+
+
+Approach: 
+Model each job as (start, end, profit) in a Job object.
+
+Sort jobs by start time ascending. We will process jobs in that order.
+
+Maintain a min-heap (priority queue) ordered by end time.
+Each heap entry stores: [endTime, bestProfitUpToThisEnd].
+
+For the current job J with start = s:
+
+Pop from the heap all jobs that end at or before s.
+While popping, maintain maxProfit = the best profit among all non-overlapping jobs we’ve seen so far.
+
+Now we can chain J after the best non-overlapping schedule and form a new profit:
+combined = J.profit + maxProfit. Push [J.end, combined] to the heap.
+
+After processing all jobs, flush the heap (pop everything) to make sure maxProfit is the maximum of any ending schedule.
+
+Return maxProfit.
+
+
+Code : 
+class Solution {
+    static class Job {
+        int start;
+        int end;
+        int profit;
+        Job(int s, int e, int p) {
+            start = s;
+            end = e;
+            profit = p;
+        }
+    }
+
+    public int jobScheduling(int[] startTime, int[] endTime, int[] profit) {
+
+        if(startTime.length == 0 || endTime.length == 0 || profit.length == 0)
+            return 0;
+
+        Job[] jobs = new Job[startTime.length];
+        for(int i=0; i<jobs.length; i++) 
+            jobs[i] = new Job(startTime[i], endTime[i], profit[i]);
+        
+        //Sort jobs on the basis of start times
+        Arrays.sort(jobs, new Comparator<Job>() {
+            @Override
+            public int compare(Job a, Job b) {
+                return Integer.compare(a.start, b.start);
+            }
+        });
+
+        // 3) Min-heap ordered by "end time".
+        // Each heap element = int[]{endTime, bestProfitUpToThisEnd}
+        PriorityQueue<int[]> minHeap = new PriorityQueue<int[]>(new Comparator<int[]>() {
+            @Override
+            public int compare(int[] a, int[] b) {
+                return Integer.compare(a[0], b[0]);
+            }
+        });
+
+        int maxProfit = 0; // best profit found so far among all "completed" schedules
+        // Seed heap with first job’s schedule
+        minHeap.offer(new int[]{jobs[0].end, jobs[0].profit});
+
+        for(int i=1; i<jobs.length; i++) {
+            
+            // Pop and "settle" all jobs that end on or before the current job's start.
+            // These are non-overlapping with the current job, so we can update maxProfit.
+            // Use <= (NOT <) because starting at exactly the end time is allowed.
+            while(!minHeap.isEmpty() && minHeap.peek()[0] <= jobs[i].start) {
+                maxProfit = Math.max(maxProfit, minHeap.poll()[1]);
+            }
+
+            // Now we can chain the current job after the best non-overlapping schedule.
+            // If no non-overlapping job exists yet, maxProfit will be 0, which is correct.
+            int combined = jobs[i].profit + maxProfit;
+
+            //push the schedule with current job end time and combined profit with any non-overlapping schedule maxProfit
+            minHeap.offer(new int[]{jobs[i].end, combined});
+        }
+
+        //Some best schedules might still be in the heap; flush to settle final maxProfit.
+        while(!minHeap.isEmpty())
+            maxProfit = Math.max(maxProfit, minHeap.poll()[1]);
+
+        return maxProfit;
+
+    }
+}
+
+Time: O(nlogn) : nlogn sorting + n heap operations which are logn too. Hence O(nlogn)
+Space: O(n) for the heap

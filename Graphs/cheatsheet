@@ -1,0 +1,45 @@
+LC 200 Number of Islands
+
+DFS
+
+Time: O(mxn) Space: O(mxn) for visited array
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Lc 1091 Shortest Path in Binary Matrix 8-directional. Only traverse through 0
+
+soln : Queue<int[]> putting row,col,dist in the queue. Visited[][] marking cell true the moment you put in queue
+after polling, if find dest cell return dist. else if queue got empty, return -1
+
+Note: start edge case, if source = 1 or dest = 1, return -1;
+
+Time: O(mxn) Space: O(mxn)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Shortest path print also in Binary Matrix
+
+add on from previous, just Queue<Object[]> putting row,col,dist,path in the queue. When dest reached, print currPath and return currDist
+path -> "row,col" . At every add on queue , add with brackets and arrows
+
+Time: O(mxn) Space: O(mxn)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Shortest path adjlist undirected
+
+same as previous queue. Just making adjacency list is the game
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+All paths in binary matrix
+
+- DFS + Backtracking 
+mark visited inside dfs. Then check in each direction. Then once done dfs done in every direction, mark visited false again for that node (backtrack)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 797 All Paths from Source to Target in a DAG
+
+Soln : Make adj list , then again through BFS queue
+

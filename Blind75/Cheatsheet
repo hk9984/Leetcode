@@ -682,6 +682,21 @@ Time: O(s + t) where s and t are lengths of s and t strings . Space: O(s + t) sa
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
+Dijkstra - Shortest distance of all vertices from source vertex, and return array of integers where ith element denotes the shortest dist.
+b/w ith node and source vertex
+
+Steps: 
+- Create Node class with int node, and int weight
+- dist[] filled with Integer.MAX_VALUE and only 0 when i == src
+- Create Adjacency list - List<List<Node>> according to the input 2d array edges[][]
+- Create priority queue (Node) minHeap - compare method -> return Integer.compare(nodeA.weight, nodeB.weight) - Sort on the basis of node weight
+- Put src element in queue such as minHeap.offer(new Node(src,0))
+- Loop until queue is empty
+- poll element, check in adjacency list . check if dist[neighNode] > dist[polledNode] + neighNode.weight. If yes, then update dist[neighNode] and then add neighndoe in queue like minHeap.offer(new Node(neighNode, dist[neighNode]))
+- After every node processed, our dist[] is updated with all weights. Return dist array
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
 Sofi Questions
 
 Lc Reverse LinkedList

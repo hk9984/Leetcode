@@ -144,8 +144,80 @@ Time: O(n) Space: O(n) becasue created separate Bucket array
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 LC 1600. Throne Inheritance
+A kingdom consists of a king, his children, his grandchildren, and so on. Every once in a while, someone in the family dies or a child is born.
 
-Tree data structure creation with hashmap
+The kingdom has a well-defined order of inheritance that consists of the king as the first member. 
+Let's define the recursive function Successor(x, curOrder), which given a person x and the inheritance order so far, 
+returns who should be the next person after x in the order of inheritance.
+
+Implement the ThroneInheritance class:
+
+ThroneInheritance(string kingName) Initializes an object of the ThroneInheritance class. The name of the king is given as part of the constructor.
+void birth(string parentName, string childName) Indicates that parentName gave birth to childName.
+void death(string name) Indicates the death of name. The death of the person doesn't affect the Successor function nor the current inheritance order. You can treat it as just marking the person as dead.
+string[] getInheritanceOrder() Returns a list representing the current order of inheritance excluding dead people.
+
+Example 1:
+
+Input
+["ThroneInheritance", "birth", "birth", "birth", "birth", "birth", "birth", "getInheritanceOrder", "death", "getInheritanceOrder"]
+[["king"], ["king", "andy"], ["king", "bob"], ["king", "catherine"], ["andy", "matthew"], ["bob", "alex"], ["bob", "asha"], [null], ["bob"], [null]]
+Output
+[null, null, null, null, null, null, null, ["king", "andy", "matthew", "bob", "alex", "asha", "catherine"], null, ["king", "andy", "matthew", "alex", "asha", "catherine"]]
+
+Explanation
+ThroneInheritance t= new ThroneInheritance("king"); // order: king
+t.birth("king", "andy"); // order: king > andy
+t.birth("king", "bob"); // order: king > andy > bob
+t.birth("king", "catherine"); // order: king > andy > bob > catherine
+t.birth("andy", "matthew"); // order: king > andy > matthew > bob > catherine
+t.birth("bob", "alex"); // order: king > andy > matthew > bob > alex > catherine
+t.birth("bob", "asha"); // order: king > andy > matthew > bob > alex > asha > catherine
+t.getInheritanceOrder(); // return ["king", "andy", "matthew", "bob", "alex", "asha", "catherine"]
+t.death("bob"); // order: king > andy > matthew > bob > alex > asha > catherine
+t.getInheritanceOrder(); // return ["king", "andy", "matthew", "alex", "asha", "catherine"]
+
+
+
+Solution: Tree data structure creation with hashmap (Think family tree)
+class ThroneInheritance {
+
+    Map<String, List<String>> personChildren;
+    Set<String> dead;
+    String king;
+    public ThroneInheritance(String kingName) {
+        personChildren = new HashMap<>();
+        dead = new HashSet<>();
+        king = kingName;
+        personChildren.put(kingName, new ArrayList<>());
+    }
+    
+    public void birth(String parentName, String childName) {
+        
+        if(!personChildren.containsKey(parentName))
+            personChildren.put(parentName, new ArrayList<>());
+        personChildren.get(parentName).add(childName);
+        personChildren.put(childName, new ArrayList<>());
+    }
+    
+    public void death(String name) {
+        dead.add(name); 
+    }
+
+    public void dfs(String person, List<String> order) {
+        if(!dead.contains(person))
+            order.add(person);
+        List<String> children = personChildren.get(person);
+        for(String child: children) 
+            dfs(child, order);
+    }
+    
+    public List<String> getInheritanceOrder() {
+        List<String> order = new ArrayList<String>();
+        dfs(king, order);
+        return order;
+    }
+}
 
 Time: O(n) Space: O(n)
 
@@ -462,3 +534,305 @@ class Solution {
 
 Time: O(nlogn) : nlogn sorting + n heap operations which are logn too. Hence O(nlogn)
 Space: O(n) for the heap
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC438. Find All Anagrams in a String
+Given two strings s and p, return an array of all the start indices of p's anagrams in s. You may return the answer in any order.
+
+Example 1:
+
+Input: s = "cbaebabacd", p = "abc"
+Output: [0,6]
+Explanation:
+The substring with start index = 0 is "cba", which is an anagram of "abc".
+The substring with start index = 6 is "bac", which is an anagram of "abc".
+
+
+solution: Sliding window
+Using Hashmap for pcounts and scounts , and then using pCounts.equals(sCounts) to check if maps are equal
+However, more efficient solution using int arrays of 26 length and comparing
+
+public List<Integer> findAnagrams(String s, String p) {
+
+    if(s.length() == 0 || p.length() == 0 || p.length() > s.length())
+        return new ArrayList<>();    
+    int[] pCounts = new int[26];
+    int[] sCounts = new int[26];
+    List<Integer> resultIndices = new ArrayList<>();
+
+    for(int i=0; i<p.length(); i++)
+        pCounts[p.charAt(i) - 'a']++;
+
+    char[] sArr = s.toCharArray();
+    for(int i=0; i<sArr.length; i++) {
+        sCounts[sArr[i] - 'a']++;
+        if(i >= p.length()) {
+            sCounts[sArr[i-p.length()] - 'a']--;
+        }
+        if(Arrays.equals(pCounts,sCounts))
+            resultIndices.add(i-p.length()+1);
+
+    }
+    return resultIndices;
+}
+
+Time: O(len(s)) - One pass over string s. 
+Space: O(K) - K distinct elements . However, it can be 26 as pCount and sCount are 26 length always
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+LC 588. Design In-Memory File System
+
+Solution 1: Using HashMap and sorting on ls
+
+import java.util.*;
+
+public class FileSystem {
+
+    // Node type representing BOTH directories and files.
+    // - If isFile == false  -> this node is a directory; use 'children'
+    // - If isFile == true   -> this node is a file; use 'content'
+    class File {
+        boolean isFile = false;                 // marks whether this node is a file
+        Map<String, File> children = new HashMap<>(); // directory entries: name -> node
+        StringBuilder content = new StringBuilder();                    // file contents (empty for directories)
+    }
+
+    // Root of the filesystem, representing "/"
+    File root = null;
+
+    public FileSystem() {
+        root = new File();                      // root starts as an empty directory
+    }
+
+    /**
+     * List entries at 'path'.
+     * - If 'path' is a directory, return all child names.
+     * - If 'path' is a file, return a singleton list with the file name.
+     * The result should be lexicographically sorted.
+     */
+    public List<String> ls(String path) {
+        String[] dirs = path.split("/");        // split absolute path into segments
+        File node = root;                       // start traversal at "/"
+        List<String> result = new ArrayList<>();// to collect names to return
+        String name = "";                       // last non-empty segment (used for file name)
+
+        // Walk down the path segments from the root
+        for (String dir : dirs) {
+            if (dir.length() == 0) continue;    // skip leading "" from split("/") and any doubles
+            if (!node.children.containsKey(dir)) {
+                // If any segment does not exist, return empty list (LC won't usually hit this)
+                return result;
+            }
+            node = node.children.get(dir);      // descend into the next node
+            name = dir;                         // keep track of the last segment name
+        }
+
+        if (node.isFile) {
+            // If the final node is a FILE, LS returns only that file's name
+            result.add(name);
+        } else {
+            // If the final node is a DIRECTORY, LS returns all its child names
+            for (String key : node.children.keySet()) {
+                result.add(key);
+            }
+        }
+
+        // Problem requires lexicographic order; HashMap is unordered, so we sort here.
+        Collections.sort(result);
+        return result;
+    }
+
+    /**
+     * Make the directory at 'path'.
+     * Create any missing intermediate directories along the way.
+     */
+    public void mkdir(String path) {
+        String[] dirs = path.split("/");
+        File node = root;
+
+        // Walk from the root, creating any missing nodes as directories
+        for (String dir : dirs) {
+            if (dir.length() == 0) continue;    // skip empty segments
+            if (!node.children.containsKey(dir)) {
+                File file = new File();         // new node (defaults to directory)
+                node.children.put(dir, file);
+            }
+            node = node.children.get(dir);      // descend
+        }
+    }
+
+    /**
+     * Create or append content to a file at 'filePath'.
+     * If parents or the file node don't exist, create them.
+     */
+    public void addContentToFile(String filePath, String content) {
+        String[] dirs = filePath.split("/");
+        File node = root;
+
+        // Traverse or create all segments INCLUDING the final one.
+        // The final node will be marked as a file below.
+        for (String dir : dirs) {
+            if (dir.length() == 0) continue;    // skip empty segments
+            if (!node.children.containsKey(dir)) {
+                File file = new File();         // create missing node
+                node.children.put(dir, file);
+            }
+            node = node.children.get(dir);      // descend
+        }
+
+        node.isFile = true;                     // mark final node as a file
+        // String concatenation copies existing content; fine for small tests,
+        // but for MANY appends consider StringBuilder to avoid O(total^2) behavior.
+        node.content.append(content);                // append new content
+    }
+
+    /**
+     * Read and return the content of the file at 'filePath'.
+     * NOTE: This implementation creates missing nodes on the way if they don't exist,
+     * which is lenient. LeetCode test inputs typically won't call read on missing paths.
+     */
+    public String readContentFromFile(String filePath) {
+        String[] dirs = filePath.split("/");
+        File node = root;
+
+        // Traverse to the final node (creates any missing nodes along the path)
+        for (String dir : dirs) {
+            if (dir.length() == 0) continue;    // skip empty segments
+            if (!node.children.containsKey(dir)) {
+                File file = new File();         // create missing node (lenient behavior)
+                node.children.put(dir, file);
+            }
+            node = node.children.get(dir);      // descend
+        }
+
+        return node.content.toString();                    // return content (empty string if not yet written)
+    }
+}
+
+
+
+Solution 2: Using TreeMap
+
+import java.util.*;
+
+public class FileSystem {
+
+    // Node that can represent either a directory (via 'children') or a file (via 'content')
+    class File {
+        boolean isFile = false;                          // true => file; false => directory
+        // TreeMap keeps child names in lexicographic order automatically
+        Map<String, File> children = new TreeMap<>();    // directory entries: name -> node
+        StringBuilder content = new StringBuilder();      // file data (unused for directories)
+    }
+
+    // Root directory, representing "/"
+    File root = null;
+
+    public FileSystem() {
+        root = new File();                                // "/" starts as an empty directory
+    }
+
+    /**
+     * List entries at 'path'.
+     * - If 'path' is a directory, return all child names (already lexicographically sorted by TreeMap).
+     * - If 'path' is a file, return a singleton list with the file name.
+     */
+    public List<String> ls(String path) {
+        String[] dirs = path.split("/");                  // split absolute path into segments
+        File node = root;                                 // begin traversal from root
+        List<String> result = new ArrayList<>();          // names to return
+        String name = "";                                 // last non-empty segment (file name if 'path' is a file)
+
+        // Traverse the path segments
+        for (String dir : dirs) {
+            if (dir.length() == 0) continue;              // skip "" from leading slash or double slashes
+            if (!node.children.containsKey(dir)) {
+                // Path segment not found -> return empty list (LeetCode generally won't hit this)
+                return result;
+            }
+            node = node.children.get(dir);                // descend to the next node
+            name = dir;                                   // remember the last segment name
+        }
+
+        if (node.isFile) {
+            // If the target is a FILE, return just its name
+            result.add(name);
+        } else {
+            // If the target is a DIRECTORY, return all immediate child names
+            // TreeMap guarantees keys are already in lexicographic order
+            result.addAll(node.children.keySet());
+        }
+
+        // No need to sort: TreeMap already provides sorted keys
+        return result;
+    }
+
+    /**
+     * Create the directory at 'path', creating any missing intermediate directories.
+     */
+    public void mkdir(String path) {
+        String[] dirs = path.split("/");
+        File node = root;
+
+        // Walk and create missing nodes as directories
+        for (String dir : dirs) {
+            if (dir.length() == 0) continue;              // skip empty segments
+            if (!node.children.containsKey(dir)) {
+                File file = new File();                   // new directory node (default isFile=false)
+                node.children.put(dir, file);
+            }
+            node = node.children.get(dir);                // descend
+        }
+    }
+
+    /**
+     * Create or append to a file at 'filePath'.
+     * Parents (and the file node) are created if missing.
+     */
+    public void addContentToFile(String filePath, String content) {
+        String[] dirs = filePath.split("/");
+        File node = root;
+
+        // Traverse or create all segments INCLUDING the final one
+        for (String dir : dirs) {
+            if (dir.length() == 0) continue;              // skip empty segments
+            if (!node.children.containsKey(dir)) {
+                File file = new File();                   // create missing node
+                node.children.put(dir, file);
+            }
+            node = node.children.get(dir);                // descend
+        }
+
+        node.isFile = true;                               // mark final node as a file
+        node.content.append(content);                     // efficient append via StringBuilder
+    }
+
+    /**
+     * Read and return the content of the file at 'filePath'.
+     * Note: This implementation is lenient and will create missing path nodes on the way,
+     * though LeetCode typically won't call read for missing paths.
+     */
+    public String readContentFromFile(String filePath) {
+        String[] dirs = filePath.split("/");
+        File node = root;
+
+        // Traverse to the final node (creates any missing nodes along the path)
+        for (String dir : dirs) {
+            if (dir.length() == 0) continue;              // skip empty segments
+            if (!node.children.containsKey(dir)) {
+                File file = new File();                   // create missing node
+                node.children.put(dir, file);
+            }
+            node = node.children.get(dir);                // descend
+        }
+
+        return node.content.toString();                   // return file content (empty if not yet written)
+    }
+}
+
+NOTE: 
+- If ls is rare and lookups/appends are frequent, HashMap + sort (with StringBuilder) is a solid choice.
+- If ls is frequent (or you need stable ordering/pagination), the TreeMap version
+

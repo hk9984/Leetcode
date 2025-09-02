@@ -37,7 +37,7 @@ The pod becomes Ready after /health passes; traffic begins flowing from tfo-cons
 If the roll-out fails readiness/liveness, KITT auto-rolls back.
 
 
-EQUIVALENT IN AWS: 
+EQUIVALENT IN AWS:
 - Clusters - EKS
 - Image registry - ECR
 - Ingress+LB - AWS Load Balancer Controller (ALB)
@@ -268,8 +268,30 @@ Rollback safety:
 
 If rollout health checks fail or SLOs regress, Helm/Kubernetes roll back to the previous ReplicaSet (or your CD triggers helm rollback).
 
+-----------------------------------------------------------------------------------------------
 
+TERRAFORM
 
+- Cloud-agnostic tool, used across any cloud provider
+- Infrastructure as Code (IaC) tool that allows you to build, change, and version infrastructure safely and easily
+
+The whole flow (one glance)
+
+- init → prepare workspace & providers
+
+- validate → static config sanity check
+
+- plan → compute changes (-out=plan.bin)
+
+- terraform policy check → Sentinel/OPA on plan.json
+
+- customer approval → human gate on the saved plan
+
+- apply → terraform apply plan.bin (no recompute)
+
+- destroy (optional) → planned & approved teardown
+
+NOTE: “terraform plan only compares your config with the refreshed state of resources it already manages. A manually added fourth VM isn’t in state, so the plan won’t error or propose deleting it— it’ll show no changes unless a managed VM drifted.”
 
 
 -----------------------------------------------------------------------------------------------
@@ -279,17 +301,22 @@ Kubernetes (K8s) is like an automated warehouse for your app containers
 
 k8s cluster Architecture: 
 - Control Plane - managing state of cluster. This consists of etcd, Scheduler, ControllerManager, API Server
+- Scheduler - resp. for scheduling pods onto the worker nodes in the cluster; decides which node runs which pods/containers etc. schedules pods on worker nodes based on resources and capacity
+- API Server - primary interface between control plane and rest of cluster. Client can interact with them to get status of cluster through REST APIs. the front door; every change goes through here (CRUD on cluster state). kubectl talks to API server
+- Controller Manager - runs control loops (e.g., keep N replicas, handle node/pod lifecycles); ensures everything runs as it should maintaining the desired state of resources.
+eg: Replication Controller - which ensures a desired number of replicas of a pod are running
+- etcd - Cluster's memory; KV store. Cluster's persistent state like which resources available? what state of cluster changes etc.? Info about cluster. cluster’s desired + current state; etcd used by other elements of the Control plane as well
+
+
 - Containers
 - Pods - which run >=1 containers inside
 - Nodes - K8s cluster has set of machines called nodes. Nodes run pods
-- Scheduler - decides which node runs which pods/containers etc. schedules pods on worker nodes
-- API Server - primary interface between control plane and rest of cluster. Client can interact with them to get status of cluster. the front door; every change goes through here (CRUD on cluster state). kubectl talks to API server
-- Controller Manager - runs control loops (e.g., keep N replicas, handle node/pod lifecycles).
-- etcd - KV store. Cluster's persistent state like which resources available? what state of cluster changes etc.? Info about cluster. cluster’s desired + current state.
+
+
 
 Inside each Node: 
-- container runtime: runs container on nodes, pulling images from registry, starting/stopping containers
-- kubelet: daemon; receives instr from control plane to achieve and maintain desired state of pod like what pods to run on the node
+- container runtime: runs container on nodes, pulling images from registry, starting/stopping containers, alos managing container resources
+- kubelet: daemon; receives instr from control plane about which pods to run on the node; to achieve and maintain desired state of pod like what pods to run on the node
 - kube-proxy: networking proxy on each node, LB and routing for pods inside the node
 
 
@@ -300,3 +327,9 @@ Uses of K8s:
 - Service discovery and load balancing
 - Portability - same manifests across clouds/on-prem
 
+Built-in kubernetes resources : 
+
+- Namespace: divide cluster resources b/w multiple users or teams; ideal for environments with multiple teams or projects within the same cluster - avoiding name and resource conflicts
+- Pods: smallest unit in K8s object model;running 1 or multiple containers in it. NOTE: never create pods directly in real-world, instead work with higher level resources like Deployments and Jobs, and let k8s manage underlying pods
+- ReplicaSet: A keeper of a fixed number of identical Pods: “keep N copies alive”; Owns Pods via label selectors and maintains the desired replicas. Mostly managed indirectly by a Deployment; you rarely create ReplicaSets directly in prod.
+- Deployment: The standard way to run stateless apps with rolling updates and easy rollbacks; Declarative mgr over ReplicaSets. Handles rollout strategy like RollingUpdate or Recreate
